@@ -19,18 +19,15 @@ interface Props {
 
 export default function CustomCalendar({ dateRangeState }: Props) {
   const [dateRange, setDateRange] = dateRangeState;
-  setDateRange({
-    from: new Date(),
-    to: new Date(),
-  }); //default to today
   const [disabledDates, setDisabledDates] = useState<disabledDatesType>();
   const [state, setState] = useState<String>("Today");
 
   useEffect(() => {
     async function fetchValidDates() {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("/api/sensor/min_time");
+      const timestr = await response.text();
       setDisabledDates({
-        before: subDays(new Date(), 14),
+        before: new Date(Number(timestr) * 1000),
         after: new Date(),
       });
     }
@@ -68,25 +65,7 @@ export default function CustomCalendar({ dateRangeState }: Props) {
   return (
     <Card className="w-fit min-w-1/3 py-4">
       <CardHeader className="flex flex-wrap">
-        {[
-          { label: "Today", from: new Date(), to: new Date() },
-          {
-            label: "Yesterday",
-            from: subDays(new Date(), 1),
-            to: subDays(new Date(), 1),
-          },
-          {
-            label: "Past 3 Days",
-            from: subDays(new Date(), 2),
-            to: new Date(),
-          },
-          { label: "Past Week", from: subDays(new Date(), 6), to: new Date() },
-          {
-            label: "Past Month",
-            from: subMonths(new Date(), 1),
-            to: new Date(),
-          },
-        ].map((preset, index) => (
+        {getPresets().map((preset, index) => (
           <Button
             key={index}
             variant={state == preset.label ? undefined : "outline"}
@@ -127,8 +106,6 @@ export default function CustomCalendar({ dateRangeState }: Props) {
           selected={dateRange}
           onSelect={setDateRange}
           numberOfMonths={2}
-          min={2}
-          max={20}
           disabled={disabledMatcher}
           showOutsideDays={false}
           className={`rounded-lg border shadow-sm ${
@@ -138,4 +115,33 @@ export default function CustomCalendar({ dateRangeState }: Props) {
       </CardContent>
     </Card>
   );
+}
+
+export function getPresets(): { label: string; from: Date; to: Date }[] {
+  const now = new Date();
+  const midnightToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+  let presetVals = [
+    { label: "Today", from: midnightToday, to: now },
+    {
+      label: "Yesterday",
+      from: subDays(midnightToday, 1),
+      to: midnightToday,
+    },
+    {
+      label: "Past 3 Days",
+      from: subDays(midnightToday, 2),
+      to: new Date(),
+    },
+    { label: "Past Week", from: subDays(midnightToday, 6), to: new Date() },
+    {
+      label: "Past Month",
+      from: subMonths(midnightToday, 1),
+      to: new Date(),
+    },
+  ];
+  return presetVals;
 }

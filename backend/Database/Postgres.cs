@@ -33,14 +33,21 @@ public class PostgresService {
         await cmd.ExecuteNonQueryAsync();
     }
 
-    public async Task<List<SensorData>> GetRecentAsync(int limit) {
+    public async Task<List<SensorData>> GetRecentAsync(int? limit, long? start, long? stop) {
         var results = new List<SensorData>();
 
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        using var cmd = new NpgsqlCommand("SELECT temperature, humidity, time FROM sensor_readings ORDER BY time DESC LIMIT @limit;", conn);
-        cmd.Parameters.AddWithValue("@limit", limit);
+        using var cmd = new NpgsqlCommand(@"SELECT temperature, humidity, time FROM sensor_readings 
+                                    WHERE 1=1 
+                                    AND (time >= @start OR @start IS NULL)
+                                    AND (time <= @stop OR @stop IS NULL)
+                                    ORDER BY time DESC 
+                                    ;", conn);
+        cmd.Parameters.AddWithValue("@start", (object?)start ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@stop", (object?)stop ?? DBNull.Value);
+
         var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync()) {
@@ -49,6 +56,24 @@ public class PostgresService {
                 humidity = reader.GetDouble(1),
                 time = reader.GetInt64(2)
             });
+        }
+
+        return results;
+    }
+
+    public async Task<long> GetOldestEntry() {
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        using var cmd = new NpgsqlCommand(@"SELECT min(time) FROM sensor_readings
+                                    ;", conn);
+
+        var reader = await cmd.ExecuteReaderAsync();
+        long results = -1;
+        if (await reader.ReadAsync()) {
+            if (!reader.IsDBNull(0)) {
+                results = reader.GetInt64(0);
+            }
         }
 
         return results;

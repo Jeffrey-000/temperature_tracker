@@ -21,9 +21,17 @@ export default function Graph({ dateRangeState }: Props) {
   const [dateRange, setDateRange] = dateRangeState;
   const [data, setData] = useState<TempData | undefined>(undefined);
   useEffect(() => {
-    async function fetchData(limit: number) {
+    async function fetchData(limit?: number) {
+      let startEpoch =
+        dateRange && dateRange.from
+          ? Math.floor(dateRange?.from.getTime() / 1000)
+          : undefined;
+      let stopEpoch =
+        dateRange && dateRange.to
+          ? Math.floor(dateRange?.to.getTime() / 1000)
+          : undefined;
       const response = await fetch(
-        `${URL}${limit != null ? `?limit=${limit}` : ""}`
+        `${URL}?start=${startEpoch ?? ""}&stop=${stopEpoch ?? ""}`
       );
       const jason = await response.json();
       const data = parseTempData(jason);
@@ -31,8 +39,8 @@ export default function Graph({ dateRangeState }: Props) {
       setData(data);
       console.log(data.temps.length);
     }
-    fetchData(10);
-  }, []);
+    fetchData();
+  }, [dateRange]);
   return (
     <>
       <GraphComponent
