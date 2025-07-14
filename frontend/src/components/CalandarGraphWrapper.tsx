@@ -5,6 +5,7 @@ import CustomCalendar from "@/components/calendars/CustomCalendar";
 import Graph from "@/components/Graph";
 import { getPresets } from "@/components/calendars/CustomCalendar";
 import { toEpochTimeInSec } from "./utils";
+import { Card, CardContent } from "./ui/card";
 
 type TempJson = [{ temperature: number; humidity: number; time: number }];
 export type TempData = {
@@ -66,7 +67,9 @@ export default function CalandarGraphWrapper() {
         dateRangeState={[dateRange, setDateRange]}
         disabledDates={disabledDates}
       />
-      <Graph data={data} />
+      <div className="w-full px-10">
+        <Graph title="Bedroom Temps" data={data} />
+      </div>
     </div>
   );
 }
