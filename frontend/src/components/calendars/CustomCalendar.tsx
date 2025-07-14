@@ -1,51 +1,45 @@
 "use client";
 import { Calendar } from "../ui/calendar";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { type DateRange } from "react-day-picker";
-import { addDays, subDays, subMonths } from "date-fns";
-import { Card, CardContent, CardHeader, CardFooter } from "../ui/card";
+import { subDays, subMonths } from "date-fns";
+import { Card, CardContent, CardHeader } from "../ui/card";
 import { Button } from "../ui/button";
 import { stateTuple } from "../utils";
-
-type disabledDatesType = {
-  before?: Date;
-  after?: Date;
-  dates?: Date[];
-};
-
+import { disabledDatesType } from "../CalandarGraphWrapper";
+import { dateAtMidnight } from "../utils";
 interface Props {
   dateRangeState: stateTuple<DateRange | undefined>;
+  disabledDates: disabledDatesType | undefined;
 }
 
-export default function CustomCalendar({ dateRangeState }: Props) {
+export default function CustomCalendar({
+  dateRangeState,
+  disabledDates,
+}: Props) {
   const [dateRange, setDateRange] = dateRangeState;
-  const [disabledDates, setDisabledDates] = useState<disabledDatesType>();
   const [state, setState] = useState<String>("Today");
 
-  useEffect(() => {
-    async function fetchValidDates() {
-      const response = await fetch("/api/sensor/min_time");
-      const timestr = await response.text();
-      setDisabledDates({
-        before: new Date(Number(timestr) * 1000),
-        after: new Date(),
-      });
-    }
-    fetchValidDates();
-  }, []);
   const disabledMatcher = useMemo(() => {
     return (date: Date) => {
+      const beforeDateMidnight = //normalize the dates to midnight first
+        disabledDates && disabledDates.before
+          ? dateAtMidnight(disabledDates.before)
+          : undefined;
+      const afterDateMidnight =
+        disabledDates && disabledDates.after
+          ? dateAtMidnight(disabledDates.after)
+          : undefined;
       // Static rule: Always disable dates before .before date
       if (
-        disabledDates &&
-        disabledDates.before &&
-        date < subDays(disabledDates.before, 1) //for some reason it includes the before date. fix by subtracting an extra date
+        beforeDateMidnight &&
+        date < beforeDateMidnight //for some reason it includes the before date. fix by subtracting an extra date
       ) {
         return true;
       }
 
       // Static rule: Disable dates after a certain date
-      if (disabledDates && disabledDates.after && date > disabledDates.after) {
+      if (afterDateMidnight && date > afterDateMidnight) {
         return true;
       }
 
@@ -93,25 +87,24 @@ export default function CustomCalendar({ dateRangeState }: Props) {
           className="flex-1"
           onClick={() => {
             setState("Custom");
-            //setDateRange({ from: undefined, to: undefined });
           }}
         >
           {"Custom"}
         </Button>
       </CardHeader>
       <CardContent className="px-4 flex justify-center">
-        <Calendar
-          mode="range"
-          defaultMonth={subMonths(new Date(), 1)}
-          selected={dateRange}
-          onSelect={setDateRange}
-          numberOfMonths={2}
-          disabled={disabledMatcher}
-          showOutsideDays={false}
-          className={`rounded-lg border shadow-sm ${
-            state == "Custom" ? "" : "hidden"
-          }`}
-        />
+        {state == "Custom" && (
+          <Calendar
+            className={`rounded-lg border shadow-sm `}
+            mode="range"
+            defaultMonth={subMonths(new Date(), 1)}
+            numberOfMonths={2}
+            selected={dateRange}
+            onSelect={setDateRange}
+            disabled={disabledMatcher}
+            showOutsideDays={false}
+          />
+        )}
       </CardContent>
     </Card>
   );
@@ -119,11 +112,7 @@ export default function CustomCalendar({ dateRangeState }: Props) {
 
 export function getPresets(): { label: string; from: Date; to: Date }[] {
   const now = new Date();
-  const midnightToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
-  );
+  const midnightToday = dateAtMidnight(now);
   let presetVals = [
     { label: "Today", from: midnightToday, to: now },
     {
@@ -134,13 +123,13 @@ export function getPresets(): { label: string; from: Date; to: Date }[] {
     {
       label: "Past 3 Days",
       from: subDays(midnightToday, 2),
-      to: new Date(),
+      to: now,
     },
-    { label: "Past Week", from: subDays(midnightToday, 6), to: new Date() },
+    { label: "Past Week", from: subDays(midnightToday, 6), to: now },
     {
       label: "Past Month",
       from: subMonths(midnightToday, 1),
-      to: new Date(),
+      to: now,
     },
   ];
   return presetVals;
