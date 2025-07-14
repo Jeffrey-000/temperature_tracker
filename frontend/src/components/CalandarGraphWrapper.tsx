@@ -28,7 +28,7 @@ export default function CalandarGraphWrapper() {
   const [disabledDates, setDisabledDates] = useState<disabledDatesType>();
 
   useEffect(() => {
-    async function fetchData(limit?: number) {
+    async function fetchData() {
       const URL = "/api/sensor";
       const startEpoch =
         dateRange && dateRange.from

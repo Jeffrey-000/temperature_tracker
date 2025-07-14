@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "frontend",
+  title: "Temps🌡️",
   description: "My frontend",
   icons: {
     icon: "/favicon.ico",
