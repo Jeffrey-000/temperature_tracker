@@ -30,11 +30,11 @@ export default function CalandarGraphWrapper() {
   useEffect(() => {
     async function fetchData(limit?: number) {
       const URL = "/api/sensor";
-      let startEpoch =
+      const startEpoch =
         dateRange && dateRange.from
           ? toEpochTimeInSec(dateRange.from)
           : undefined;
-      let stopEpoch =
+      const stopEpoch =
         dateRange && dateRange.to ? toEpochTimeInSec(dateRange.to) : undefined;
       const response = await fetch(
         `${URL}?start=${startEpoch ?? ""}&stop=${stopEpoch ?? ""}`
@@ -72,8 +72,8 @@ export default function CalandarGraphWrapper() {
 }
 
 function parseTempData(json: TempJson): TempData {
-  let temps = json.map((item) => item.temperature);
-  let hum = json.map((item) => item.humidity);
-  let times = json.map((item) => new Date(item.time * 1000)); //date assumes epoch time in ms
+  const temps = json.map((item) => item.temperature);
+  const hum = json.map((item) => item.humidity);
+  const times = json.map((item) => new Date(item.time * 1000)); //date assumes epoch time in ms
   return { temps, hum, times };
 }

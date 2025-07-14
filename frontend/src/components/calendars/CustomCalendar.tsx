@@ -18,7 +18,7 @@ export default function CustomCalendar({
   disabledDates,
 }: Props) {
   const [dateRange, setDateRange] = dateRangeState;
-  const [state, setState] = useState<String>("Today");
+  const [state, setState] = useState<string>("Today");
 
   const disabledMatcher = useMemo(() => {
     return (date: Date) => {
@@ -113,7 +113,7 @@ export default function CustomCalendar({
 export function getPresets(): { label: string; from: Date; to: Date }[] {
   const now = new Date();
   const midnightToday = dateAtMidnight(now);
-  let presetVals = [
+  return [
     { label: "Today", from: midnightToday, to: now },
     {
       label: "Yesterday",
@@ -132,5 +132,4 @@ export function getPresets(): { label: string; from: Date; to: Date }[] {
       to: now,
     },
   ];
-  return presetVals;
 }
