@@ -5,7 +5,6 @@ import CustomCalendar from "@/components/calendars/CustomCalendar";
 import Graph from "@/components/Graph";
 import { getPresets } from "@/components/calendars/CustomCalendar";
 import { toEpochTimeInSec } from "./utils";
-import { Card, CardContent } from "./ui/card";
 
 type TempJson = [{ temperature: number; humidity: number; time: number }];
 export type TempData = {
