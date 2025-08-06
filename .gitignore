@@ -3,3 +3,6 @@
 .env*
 .vscode/
 .vscode
+logs/
+todo
+*.plist

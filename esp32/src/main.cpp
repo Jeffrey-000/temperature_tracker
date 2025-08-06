@@ -16,7 +16,7 @@ void sendMessage(unsigned long now);
 
 // DHT settings
 const uint8_t DHTPIN = 4; // GPIO where the DHT sensor is connected
-const uint8_t DHTTYPE = DHT11;
+const uint8_t DHTTYPE = DHT22;
 // https://www.adafruit.com/product/386?srsltid=AfmBOoq0uIDvW8eU0y9S7mg77y8f04Icmpm7jYoAt8YaKJMwxaD57tUQ
 DHT dht(DHTPIN, DHTTYPE);
 
