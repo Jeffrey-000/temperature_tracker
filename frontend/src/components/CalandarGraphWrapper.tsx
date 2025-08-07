@@ -29,7 +29,7 @@ export default function CalandarGraphWrapper() {
 
   useEffect(() => {
     async function fetchData() {
-      const URL = "/api/sensor";
+      const URL = "/api/sensor/temps";
       const startEpoch =
         dateRange && dateRange.from
           ? toEpochTimeInSec(dateRange.from)

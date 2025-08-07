@@ -6,3 +6,4 @@
 logs/
 todo
 *.plist
+bin/
