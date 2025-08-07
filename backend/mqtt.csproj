@@ -4,6 +4,9 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <PublishSingleFile>true</PublishSingleFile>
+    <RuntimeIdentifier>osx-arm64</RuntimeIdentifier>
+    <AssemblyName>backend_temperature</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

@@ -4,11 +4,12 @@ using System.Text.Json;
 using System.Text;
 using MQTT.Database;
 using MQTT.Models;
+using MQTT.SECRETS;
 
 
 public class MqttListenerService : BackgroundService {
-    private readonly string MQTT_SERVER = Environment.GetEnvironmentVariable("MQTT_SERVER");
-    private readonly string TOPIC = Environment.GetEnvironmentVariable("TOPIC");
+    private readonly string MQTT_SERVER = SECRETS.MQTT_SERVER;
+    private readonly string TOPIC = "sensors/temperature/#"; //all topics that start with sensors/esp32/temperature
     private readonly PostgresService _db;
 
     public MqttListenerService(PostgresService db) => _db = db;
@@ -22,8 +23,9 @@ public class MqttListenerService : BackgroundService {
             .Build();
 
         mqttClient.ApplicationMessageReceivedAsync += async e => {
+            string topic = e.ApplicationMessage.Topic.Replace("/", "_");
             var data = MessageHandler.handleReceive(e);
-            await _db.SaveSensorDataAsync(data);
+            if (data is not null) await _db.SaveSensorDataAsync(topic, data);
         };
 
 
@@ -43,17 +45,16 @@ public class MqttListenerService : BackgroundService {
 
 
 static class MessageHandler {
-    public static SensorData handleReceive(MqttApplicationMessageReceivedEventArgs e) {
-        // Console.WriteLine("Received application message.");
+    public static SensorData? handleReceive(MqttApplicationMessageReceivedEventArgs e) {
         string jasonString = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-        // Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
-        // Console.WriteLine($"+ Payload = {jasonString}");
+        if (jasonString is null) return null;
+        try {
+            SensorData data = JsonSerializer.Deserialize<SensorData>(jasonString);
+            return data;
+        } catch (Exception) {
+            return null;
+        }
 
-        // Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
-        // Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
-        SensorData data = JsonSerializer.Deserialize<SensorData>(jasonString);
-        // Console.WriteLine(data.time);
-        return data;
     }
 
     public static TObject DumpToConsole<TObject>(this TObject @object) {

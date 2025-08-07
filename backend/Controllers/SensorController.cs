@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MQTT.Database;
 using MQTT.Models;
 
-namespace MqttToPostgresApi.Controllers;
+namespace MQTT.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -11,13 +11,19 @@ public class SensorController : ControllerBase {
 
     public SensorController(PostgresService db) => _db = db;
 
-    [HttpGet]
-    public async Task<IEnumerable<SensorData>> Get([FromQuery] int? limit = null,
+    [HttpGet("temps")]
+    public async Task<IEnumerable<SensorData>> GetTemps([FromQuery] string? topic = "sensors/temperature/esp32/bedroom",
+                                                    [FromQuery] int? limit = null,
                                                     [FromQuery] int? start = null,
                                                     [FromQuery] int? stop = null) =>
-        await _db.GetRecentAsync(limit, start, stop);
+        await _db.GetRecentAsync(topic!, limit, start, stop);
 
     [HttpGet("min_time")]
-    public async Task<long> GetMinTime() =>
-        await _db.GetOldestEntry();
+    public async Task<long> GetMinTime([FromQuery] string? topic = "sensors/temperature/esp32/bedroom") =>
+        await _db.GetOldestEntry(topic!);
+
+
+    [HttpGet("topic_list")]
+    public async Task<IEnumerable<string>> GetTopicList() =>
+        await _db.GetTopicList();
 }
