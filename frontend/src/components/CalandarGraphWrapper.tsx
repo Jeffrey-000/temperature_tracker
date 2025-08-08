@@ -28,6 +28,7 @@ export default function CalandarGraphWrapper() {
   const [data, setData] = useState<TempData | undefined>(undefined);
   const [disabledDates, setDisabledDates] = useState<disabledDatesType>();
   const [selectorValue, setSelectorValue] = useState<string>("");
+
   const [selectorData, setSelectorData] = useState<RoomSelectorRoomType[]>([]);
 
   useEffect(() => {
@@ -74,6 +75,9 @@ export default function CalandarGraphWrapper() {
           return { value: data, label: data.replace("_", "/") };
         })
       );
+      if (data && data.length > 0) {
+        setSelectorValue(data[0]); // ----------> sets default chart to first item in topic list
+      }
     }
     fetchValidDates();
     fetchSelectorData();
@@ -88,7 +92,7 @@ export default function CalandarGraphWrapper() {
       <CustomCalendar
         dateRangeState={[dateRange, setDateRange]}
         disabledDates={disabledDates}
-      />
+      ></CustomCalendar>
       <div className="w-full px-10">
         <Graph title="Bedroom Temps" data={data} />
       </div>

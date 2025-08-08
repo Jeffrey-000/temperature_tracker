@@ -11,6 +11,7 @@ import { dateAtMidnight } from "../utils";
 interface Props {
   dateRangeState: stateTuple<DateRange | undefined>;
   disabledDates: disabledDatesType | undefined;
+  children?: React.ReactNode;
 }
 
 export default function CustomCalendar({
@@ -80,7 +81,7 @@ export default function CustomCalendar({
           >
             {preset.label}
           </Button>
-        ))}{" "}
+        ))}
         <Button
           variant={state == "Custom" ? undefined : "outline"}
           size="sm"
