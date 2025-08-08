@@ -43,7 +43,7 @@ export default function CalandarGraphWrapper() {
       const response = await fetch(
         `${URL}?start=${startEpoch ?? ""}&stop=${
           stopEpoch ?? ""
-        }&topic${selectorValue}`
+        }&topic=${selectorValue}`
       );
       const jason = await response.json();
       const data = parseTempData(jason);
