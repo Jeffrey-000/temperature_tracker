@@ -3,6 +3,8 @@ using MQTT.Database;
 DotNetEnv.Env.Load();
 
 int PORT = 11696;
+Console.WriteLine(DateTime.Now.ToString("f"));
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options => {

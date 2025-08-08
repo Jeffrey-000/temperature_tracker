@@ -5,6 +5,7 @@ import CustomCalendar from "@/components/calendars/CustomCalendar";
 import Graph from "@/components/Graph";
 import { getPresets } from "@/components/calendars/CustomCalendar";
 import { toEpochTimeInSec } from "./utils";
+import { RoomSelector, RoomSelectorRoomType } from "./RoomSelector";
 
 type TempJson = [{ temperature: number; humidity: number; time: number }];
 export type TempData = {
@@ -26,6 +27,8 @@ export default function CalandarGraphWrapper() {
   });
   const [data, setData] = useState<TempData | undefined>(undefined);
   const [disabledDates, setDisabledDates] = useState<disabledDatesType>();
+  const [selectorValue, setSelectorValue] = useState<string>("");
+  const [selectorData, setSelectorData] = useState<RoomSelectorRoomType[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -37,7 +40,9 @@ export default function CalandarGraphWrapper() {
       const stopEpoch =
         dateRange && dateRange.to ? toEpochTimeInSec(dateRange.to) : undefined;
       const response = await fetch(
-        `${URL}?start=${startEpoch ?? ""}&stop=${stopEpoch ?? ""}`
+        `${URL}?start=${startEpoch ?? ""}&stop=${
+          stopEpoch ?? ""
+        }&topic${selectorValue}`
       );
       const jason = await response.json();
       const data = parseTempData(jason);
@@ -45,8 +50,12 @@ export default function CalandarGraphWrapper() {
       setData(data);
       //console.log(data.temps.length);
     }
+    if (selectorValue.length === 0) {
+      setData(undefined);
+      return;
+    }
     fetchData();
-  }, [dateRange]);
+  }, [dateRange, selectorValue]);
 
   useEffect(() => {
     async function fetchValidDates() {
@@ -57,11 +66,25 @@ export default function CalandarGraphWrapper() {
         after: new Date(),
       });
     }
+    async function fetchSelectorData() {
+      const response = await fetch("/api/sensor/topic_list");
+      const data = await response.json();
+      setSelectorData(
+        data.map((data: string): RoomSelectorRoomType => {
+          return { value: data, label: data.replace("_", "/") };
+        })
+      );
+    }
     fetchValidDates();
+    fetchSelectorData();
   }, []);
 
   return (
     <div className="container flex flex-col items-center max-w-[100vw] ">
+      <RoomSelector
+        valueState={[selectorValue, setSelectorValue]}
+        rooms={selectorData}
+      />
       <CustomCalendar
         dateRangeState={[dateRange, setDateRange]}
         disabledDates={disabledDates}
