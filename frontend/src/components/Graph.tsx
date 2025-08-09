@@ -24,6 +24,20 @@ export default function Graph({ data, title }: Props) {
           line: { color: "#BB86FC" },
           name: "Temperature",
         },
+        // {
+        //   // Highlight last point
+        //   x: data ? [data.times[data.times.length - 1]] : [],
+        //   y: data ? [data.temps[data.temps.length - 1]] : [],
+        //   type: "scatter",
+        //   mode: "text+markers",
+        //   marker: { color: "red", size: 10 },
+        //   text:
+        //     data && data.temps
+        //       ? [`${data.temps[data.temps.length - 1].toFixed(1)}°F`]
+        //       : [],
+        //   textposition: "top center",
+        //   showlegend: false,
+        // },
       ]}
       layout={{
         title: { text: title },

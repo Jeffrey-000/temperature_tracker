@@ -72,7 +72,12 @@ export default function CalandarGraphWrapper() {
       const data = await response.json();
       setSelectorData(
         data.map((data: string): RoomSelectorRoomType => {
-          return { value: data, label: data.replace("_", "/") };
+          return {
+            value: data,
+            label: data
+              .substring("sensors/temperature/".length) //cuts off front
+              .replace("_", "/"),
+          };
         })
       );
       if (data && data.length > 0) {
@@ -94,7 +99,12 @@ export default function CalandarGraphWrapper() {
         disabledDates={disabledDates}
       ></CustomCalendar>
       <div className="w-full px-10">
-        <Graph title="Bedroom Temps" data={data} />
+        <Graph
+          title={selectorValue
+            .substring("sensors/temperature/".length) //cuts off front
+            .replace("_", "/")}
+          data={data}
+        />
       </div>
     </div>
   );
