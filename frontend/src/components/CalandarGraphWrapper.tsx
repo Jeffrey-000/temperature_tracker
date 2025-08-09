@@ -194,7 +194,9 @@ function TemperatureWidget({ data }: { data: TempData[] | undefined }) {
 
       <DrawerContent className="w-80 p-6">
         <DrawerHeader>
-          <DrawerTitle>Temperature & Humidity Stats</DrawerTitle>
+          <DrawerTitle className="text-lg font-semibold">
+            Temperature & Humidity Stats
+          </DrawerTitle>
         </DrawerHeader>
 
         <div className="space-y-4">
@@ -213,11 +215,11 @@ function TemperatureWidget({ data }: { data: TempData[] | undefined }) {
           <div className="flex flex-col space-y-2">
             <h3 className="text-lg font-semibold">Humidity (%)</h3>
             <div className="flex justify-between text-sm text-gray-700">
-              <span>{`Max: ${maxHumidity?.temperature.toFixed(1)}`}</span>
+              <span>{`Max: ${maxHumidity?.humidity.toFixed(1)}`}</span>
               <span>{`(${maxHumidity?.time.toLocaleString()})`}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-700">
-              <span>{`Min: ${minHumidity?.temperature.toFixed(1)}`}</span>
+              <span>{`Min: ${minHumidity?.humidity.toFixed(1)}`}</span>
               <span>{`(${minHumidity?.time.toLocaleString()})`}</span>
             </div>
           </div>
