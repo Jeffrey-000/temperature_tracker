@@ -6,38 +6,37 @@ import { type TempData } from "./CalandarGraphWrapper";
 import { useTheme } from "next-themes";
 
 interface Props {
-  data: TempData | undefined;
+  data: TempData[] | undefined;
   title: string;
 }
 
 export default function Graph({ data, title }: Props) {
   const { theme } = useTheme();
+  const lastTemp: TempData | undefined =
+    data && data.length > 0 ? data[0] : undefined;
   return (
     <Plot
       className="w-full"
       data={[
         {
-          x: data ? data.times : [],
-          y: data ? data.temps : [],
+          x: data ? data.map((item) => item.time) : [],
+          y: data ? data.map((item) => item.temperature) : [],
           type: "scattergl", // <-- WebGL-accelerated rendering
           mode: "lines",
           line: { color: "#BB86FC" },
           name: "Temperature",
         },
-        // {
-        //   // Highlight last point
-        //   x: data ? [data.times[data.times.length - 1]] : [],
-        //   y: data ? [data.temps[data.temps.length - 1]] : [],
-        //   type: "scatter",
-        //   mode: "text+markers",
-        //   marker: { color: "red", size: 10 },
-        //   text:
-        //     data && data.temps
-        //       ? [`${data.temps[data.temps.length - 1].toFixed(1)}°F`]
-        //       : [],
-        //   textposition: "top center",
-        //   showlegend: false,
-        // },
+        {
+          // Highlight last point
+          x: lastTemp ? [lastTemp.time] : [],
+          y: lastTemp ? [lastTemp.temperature] : [],
+          type: "scatter",
+          mode: "text+markers",
+          marker: { color: "red", size: 5 },
+          text: lastTemp ? [`${lastTemp.temperature.toFixed(1)}°F`] : [],
+          textposition: "top center",
+          showlegend: false,
+        },
       ]}
       layout={{
         title: { text: title },

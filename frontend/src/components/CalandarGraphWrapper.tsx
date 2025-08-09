@@ -1,17 +1,24 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { type DateRange } from "react-day-picker";
 import CustomCalendar from "@/components/calendars/CustomCalendar";
 import Graph from "@/components/Graph";
 import { getPresets } from "@/components/calendars/CustomCalendar";
 import { toEpochTimeInSec } from "./utils";
 import { RoomSelector, RoomSelectorRoomType } from "./RoomSelector";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 type TempJson = [{ temperature: number; humidity: number; time: number }];
 export type TempData = {
-  temps: number[];
-  hum: number[];
-  times: Date[];
+  temperature: number;
+  humidity: number;
+  time: Date;
 };
 export type disabledDatesType = {
   before?: Date;
@@ -25,7 +32,7 @@ export default function CalandarGraphWrapper() {
     from: presets[0].from,
     to: presets[0].to,
   });
-  const [data, setData] = useState<TempData | undefined>(undefined);
+  const [data, setData] = useState<TempData[] | undefined>(undefined);
   const [disabledDates, setDisabledDates] = useState<disabledDatesType>();
   const [selectorValue, setSelectorValue] = useState<string>("");
 
@@ -98,7 +105,7 @@ export default function CalandarGraphWrapper() {
         dateRangeState={[dateRange, setDateRange]}
         disabledDates={disabledDates}
       ></CustomCalendar>
-      <div className="w-full px-10">
+      <div className="w-full px-10 flex flex-col items-center justify-between pt-2">
         <Graph
           title={selectorValue
             .substring("sensors/temperature/".length) //cuts off front
@@ -106,13 +113,116 @@ export default function CalandarGraphWrapper() {
           data={data}
         />
       </div>
+      {<TemperatureWidget data={data} />}
     </div>
   );
 }
 
-function parseTempData(json: TempJson): TempData {
-  const temps = json.map((item) => item.temperature);
-  const hum = json.map((item) => item.humidity);
-  const times = json.map((item) => new Date(item.time * 1000)); //date assumes epoch time in ms
-  return { temps, hum, times };
+function parseTempData(json: TempJson): TempData[] {
+  return json.map((item) => {
+    return { ...item, time: new Date(item.time * 1000) };
+  });
+}
+
+function TemperatureWidget({ data }: { data: TempData[] | undefined }) {
+  const {
+    currentTemp,
+    currentHumidity,
+    maxTemp,
+    minTemp,
+    maxHumidity,
+    minHumidity,
+  } = useMemo(() => {
+    if (!data || data.length === 0) {
+      return {
+        currentTemp: null,
+        currentHumidity: null,
+        maxTemp: null,
+        minTemp: null,
+        maxHumidity: null,
+        minHumidity: null,
+      };
+    }
+
+    const last = data[data.length - 1]; // usually last is the current/latest
+
+    const result = data.reduce(
+      (acc, item) => {
+        return {
+          maxTemp:
+            item.temperature > acc.maxTemp.temperature ? item : acc.maxTemp,
+          minTemp:
+            item.temperature < acc.minTemp.temperature ? item : acc.minTemp,
+          maxHumidity:
+            item.humidity > acc.maxHumidity.humidity ? item : acc.maxHumidity,
+          minHumidity:
+            item.humidity < acc.minHumidity.humidity ? item : acc.minHumidity,
+        };
+      },
+      {
+        maxTemp: data[0],
+        minTemp: data[0],
+        maxHumidity: data[0],
+        minHumidity: data[0],
+      }
+    );
+
+    return {
+      currentTemp: last.temperature,
+      currentHumidity: last.humidity,
+      ...result,
+    };
+  }, [data]);
+
+  return (
+    <Drawer>
+      <DrawerTrigger asChild>
+        <button
+          className="fixed bottom-6 right-6 z-50 rounded-lg bg-blue-600 px-6 py-4 text-white shadow-lg hover:bg-blue-700 transition"
+          aria-label="Open Temperature and Humidity Drawer"
+        >
+          <div className="flex flex-col items-center space-y-1">
+            <span className="text-lg font-bold">
+              🌡 {currentTemp?.toFixed(1)}°F
+            </span>
+            <span className="text-sm opacity-80">
+              💧 {currentHumidity?.toFixed(1)}%
+            </span>
+          </div>
+        </button>
+      </DrawerTrigger>
+
+      <DrawerContent className="w-80 p-6">
+        <DrawerHeader>
+          <DrawerTitle>Temperature & Humidity Stats</DrawerTitle>
+        </DrawerHeader>
+
+        <div className="space-y-4">
+          <div className="flex flex-col space-y-2">
+            <h3 className="text-lg font-semibold">Temperature (°F)</h3>
+            <div className="flex justify-between text-sm text-gray-700">
+              <span>{`Max: ${maxTemp?.temperature.toFixed(1)}`}</span>
+              <span>{`(${maxTemp?.time.toLocaleString()})`}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-700">
+              <span>{`Min: ${minTemp?.temperature.toFixed(1)}`}</span>
+              <span>{`(${minTemp?.time.toLocaleString()})`}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col space-y-2">
+            <h3 className="text-lg font-semibold">Humidity (%)</h3>
+            <div className="flex justify-between text-sm text-gray-700">
+              <span>{`Max: ${maxHumidity?.temperature.toFixed(1)}`}</span>
+              <span>{`(${maxHumidity?.time.toLocaleString()})`}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-700">
+              <span>{`Min: ${minHumidity?.temperature.toFixed(1)}`}</span>
+              <span>{`(${minHumidity?.time.toLocaleString()})`}</span>
+            </div>
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
 }
