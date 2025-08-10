@@ -5,6 +5,7 @@ namespace MQTT.Database;
 
 public class PostgresService {
     private readonly string _connectionString = SECRETS.SECRETS.POSTGRES_URL;
+    private readonly long _rejectTimePeriod = 60 * 60 * 24; //24hrs
 
     private static readonly string TABLE_TEMPLATE = @"
             CREATE TABLE IF NOT EXISTS @topic (
@@ -28,6 +29,12 @@ public class PostgresService {
 
     public async Task SaveSensorDataAsync(string topic, SensorData data) {
         if (topic is null) return;
+        if (data.temperature == 0.0 ||
+            data.temperature == 32.0 ||
+            data.humidity == 0 ||
+            data.time < DateTimeOffset.UtcNow.ToUnixTimeSeconds() - _rejectTimePeriod) {
+            return;
+        } //avoid inserting bad data into db
         topic = topic.Replace("/", "_");
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
