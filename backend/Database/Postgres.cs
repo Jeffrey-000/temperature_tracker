@@ -55,7 +55,7 @@ public class PostgresService {
                                     WHERE 1=1 
                                     AND (time >= @start OR @start IS NULL)
                                     AND (time <= @stop OR @stop IS NULL)
-                                    ORDER BY time DESC 
+                                    ORDER BY time
                                     ;", conn);
 
         cmd.Parameters.AddWithValue("@start", (object?)start ?? DBNull.Value);

@@ -2,18 +2,21 @@
 import dynamic from "next/dynamic";
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
 
-import { type TempData } from "./CalandarGraphWrapper";
+import {
+  type TempData,
+  type CalculatedDataPoints,
+} from "./CalandarGraphWrapper";
 import { useTheme } from "next-themes";
 
 interface Props {
   data: TempData[] | undefined;
   title: string;
+  calculatedDataPoints: CalculatedDataPoints;
 }
 
-export default function Graph({ data, title }: Props) {
+export default function Graph({ data, title, calculatedDataPoints }: Props) {
   const { theme } = useTheme();
-  const lastTemp: TempData | undefined =
-    data && data.length > 0 ? data[0] : undefined;
+
   return (
     <Plot
       className="w-full"
@@ -27,13 +30,41 @@ export default function Graph({ data, title }: Props) {
           name: "Temperature",
         },
         {
-          // Highlight last point
-          x: lastTemp ? [lastTemp.time] : [],
-          y: lastTemp ? [lastTemp.temperature] : [],
+          x: calculatedDataPoints
+            ? Object.values(calculatedDataPoints).map((reading) =>
+                reading ? reading.time : null
+              )
+            : [],
+          y: calculatedDataPoints
+            ? Object.values(calculatedDataPoints).map((reading) =>
+                reading ? reading.temperature : null
+              )
+            : [],
           type: "scatter",
           mode: "text+markers",
           marker: { color: "red", size: 5 },
-          text: lastTemp ? [`${lastTemp.temperature.toFixed(1)}°F`] : [],
+          text:
+            //calculatedDataPoints
+            //   ? Object.entries(calculatedDataPoints).map(([key, value]) => {
+            //       if (!value) {
+            //         return "";
+            //       }
+            //       if (key.includes("current")) {
+            //         return "Latest";
+            //       }
+            //       if (key.includes("Temp")) {
+            //         if (value.time === calculatedDataPoints.current?.time) {
+            //           return "";
+            //         }
+            //         return `${value.temperature.toFixed(1)}°F`;
+            //       }
+            //       if (key.includes("Humidity")) {
+            //         return `${value.humidity.toFixed(1)}%`;
+            //       }
+            //       return "";
+            //     })
+            //   :
+            undefined,
           textposition: "top center",
           showlegend: false,
         },

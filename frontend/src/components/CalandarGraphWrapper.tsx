@@ -26,6 +26,14 @@ export type disabledDatesType = {
   dates?: Date[];
 };
 
+export type CalculatedDataPoints = {
+  current: TempData | null;
+  maxTemp: TempData | null;
+  minTemp: TempData | null;
+  maxHumidity: TempData | null;
+  minHumidity: TempData | null;
+};
+
 export default function CalandarGraphWrapper() {
   const presets = getPresets();
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -95,6 +103,48 @@ export default function CalandarGraphWrapper() {
     fetchSelectorData();
   }, []);
 
+  const calculatedDataPoints: CalculatedDataPoints =
+    useMemo((): CalculatedDataPoints => {
+      if (!data || data.length === 0) {
+        return {
+          current: null,
+          maxTemp: null,
+          minTemp: null,
+          maxHumidity: null,
+          minHumidity: null,
+        };
+      }
+
+      const last = data[data.length - 1];
+
+      const result = data.reduce(
+        (acc, item) => {
+          return {
+            maxTemp:
+              item.temperature > acc.maxTemp.temperature ? item : acc.maxTemp,
+            minTemp:
+              item.temperature < acc.minTemp.temperature ? item : acc.minTemp,
+            maxHumidity:
+              item.humidity > acc.maxHumidity.humidity ? item : acc.maxHumidity,
+            minHumidity:
+              item.humidity < acc.minHumidity.humidity ? item : acc.minHumidity,
+          };
+        },
+        {
+          maxTemp: data[0],
+          minTemp: data[0],
+          maxHumidity: data[0],
+          minHumidity: data[0],
+        }
+      );
+
+      return {
+        current: last,
+
+        ...result,
+      };
+    }, [data]);
+
   return (
     <div className="container flex flex-col items-center max-w-[100vw] ">
       <RoomSelector
@@ -111,9 +161,10 @@ export default function CalandarGraphWrapper() {
             .substring("sensors/temperature/".length) //cuts off front
             .replace("_", "/")}
           data={data}
+          calculatedDataPoints={calculatedDataPoints}
         />
       </div>
-      {<TemperatureWidget data={data} />}
+      {<TemperatureWidget data={calculatedDataPoints} />}
     </div>
   );
 }
@@ -124,56 +175,8 @@ function parseTempData(json: TempJson): TempData[] {
   });
 }
 
-function TemperatureWidget({ data }: { data: TempData[] | undefined }) {
-  const {
-    currentTemp,
-    currentHumidity,
-    maxTemp,
-    minTemp,
-    maxHumidity,
-    minHumidity,
-  } = useMemo(() => {
-    if (!data || data.length === 0) {
-      return {
-        currentTemp: null,
-        currentHumidity: null,
-        maxTemp: null,
-        minTemp: null,
-        maxHumidity: null,
-        minHumidity: null,
-      };
-    }
-
-    const last = data[data.length - 1]; // usually last is the current/latest
-
-    const result = data.reduce(
-      (acc, item) => {
-        return {
-          maxTemp:
-            item.temperature > acc.maxTemp.temperature ? item : acc.maxTemp,
-          minTemp:
-            item.temperature < acc.minTemp.temperature ? item : acc.minTemp,
-          maxHumidity:
-            item.humidity > acc.maxHumidity.humidity ? item : acc.maxHumidity,
-          minHumidity:
-            item.humidity < acc.minHumidity.humidity ? item : acc.minHumidity,
-        };
-      },
-      {
-        maxTemp: data[0],
-        minTemp: data[0],
-        maxHumidity: data[0],
-        minHumidity: data[0],
-      }
-    );
-
-    return {
-      currentTemp: last.temperature,
-      currentHumidity: last.humidity,
-      ...result,
-    };
-  }, [data]);
-
+function TemperatureWidget({ data }: { data: CalculatedDataPoints }) {
+  const { current, maxTemp, minTemp, maxHumidity, minHumidity } = data;
   return (
     <Drawer>
       <DrawerTrigger asChild>
@@ -183,10 +186,10 @@ function TemperatureWidget({ data }: { data: TempData[] | undefined }) {
         >
           <div className="flex flex-col items-center space-y-1">
             <span className="text-lg font-bold">
-              🌡 {currentTemp?.toFixed(1)}°F
+              🌡 {current?.temperature.toFixed(1)}°F
             </span>
             <span className="text-sm opacity-80">
-              💧 {currentHumidity?.toFixed(1)}%
+              💧 {current?.humidity.toFixed(1)}%
             </span>
           </div>
         </button>
