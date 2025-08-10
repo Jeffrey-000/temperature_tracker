@@ -71,6 +71,7 @@ export default function CalandarGraphWrapper() {
       return;
     }
     fetchData();
+    localStorage.setItem("selectorValue", selectorValue);
   }, [dateRange, selectorValue]);
 
   useEffect(() => {
@@ -95,8 +96,14 @@ export default function CalandarGraphWrapper() {
           };
         })
       );
+
+      const saved = localStorage.getItem("selectorValue");
       if (data && data.length > 0) {
-        setSelectorValue(data[0]); // ----------> sets default chart to first item in topic list
+        if (saved && data.includes(saved)) {
+          setSelectorValue(saved);
+        } else {
+          setSelectorValue(data[0]); // ----------> sets default chart to first item in topic list
+        }
       }
     }
     fetchValidDates();
