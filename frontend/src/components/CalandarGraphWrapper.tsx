@@ -32,7 +32,7 @@ export default function CalandarGraphWrapper() {
 
   useEffect(() => {
     async function fetchData() {
-      const URL = "/api/sensor/temps";
+      const URL = `/api/data/${selectorValue}`;
       const startEpoch =
         dateRange && dateRange.from
           ? toEpochTimeInSec(dateRange.from)
@@ -40,10 +40,9 @@ export default function CalandarGraphWrapper() {
       const stopEpoch =
         dateRange && dateRange.to ? toEpochTimeInSec(dateRange.to) : undefined;
       const response = await fetch(
-        `${URL}?start=${startEpoch ?? ""}&stop=${
-          stopEpoch ?? ""
-        }&topic=${selectorValue}`
+        `${URL}?start=${startEpoch ?? ""}&stop=${stopEpoch ?? ""}`
       );
+      if (!response.ok) return;
       const jason = await response.json();
       const data = parseTempData(jason);
       if (data == undefined) return;
@@ -60,15 +59,15 @@ export default function CalandarGraphWrapper() {
 
   useEffect(() => {
     async function fetchValidDates() {
-      const response = await fetch("/api/sensor/min_time");
-      const timestr = await response.text();
+      const response = await fetch(`/api/topics/${selectorValue}/metadata`);
+      const timestr = await response.json();
       setDisabledDates({
-        before: new Date(Number(timestr) * 1000),
+        before: new Date(Number(timestr.start) * 1000),
         after: new Date(),
       });
     }
     async function fetchSelectorData() {
-      const response = await fetch("/api/sensor/topic_list");
+      const response = await fetch("/api/topics");
       const data = await response.json();
       setSelectorData(
         data.map((data: string): RoomSelectorRoomType => {
@@ -147,13 +146,13 @@ export default function CalandarGraphWrapper() {
         disabledDates={disabledDates}
       ></CustomCalendar>
       <div className="w-full px-10 flex flex-col items-center justify-between pt-2">
-        {/* <Graph
+        <Graph
           title={selectorValue
             .substring("sensors/temperature/".length) //cuts off front
             .replace("_", "/")}
           data={data}
           calculatedDataPoints={calculatedDataPoints}
-        /> */}
+        />
       </div>
       {<TemperatureWidget data={calculatedDataPoints} />}
     </div>

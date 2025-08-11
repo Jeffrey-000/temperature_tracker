@@ -1,21 +1,22 @@
-export type TempData = {
-  temperature: number;
-  humidity: number;
-  time: Date;
-};
-export type disabledDatesType = {
-  before?: Date;
-  after?: Date;
-  dates?: Date[];
-};
+namespace MQTT.Models;
 
-export type CalculatedDataPoints = {
-  current: TempData | null;
-  maxTemp: TempData | null;
-  minTemp: TempData | null;
-  maxHumidity: TempData | null;
-  minHumidity: TempData | null;
-};
+public record TopicStats(
+    SensorData Current,
+    Max Max,
+    Min Min
+);
+
+public record Max(
+    SensorData Temperature,
+    SensorData Humidity
+);
+
+public record Min(
+    SensorData Temperature,
+    SensorData Humidity
+);
+
+
 
 // public class TopicStats {
 //     public required SensorData current { get; set; }

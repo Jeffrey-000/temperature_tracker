@@ -1,4 +1,4 @@
-import { TempData } from "./CalandarGraphWrapper";
+import { TempData } from "@/lib/types";
 
 interface Props {
   current: TempData | null;

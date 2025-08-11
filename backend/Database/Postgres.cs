@@ -5,41 +5,55 @@ namespace MQTT.Database;
 
 public class PostgresService {
     private readonly string _connectionString = SECRETS.SECRETS.POSTGRES_URL;
-    private readonly long _rejectTimePeriod = 60 * 60 * 24; //24hrs
+    private const uint _defaultDBLimit = 10 * 60 * 24;
+    private List<string> _existingTopics;
+    public PostgresService() {
+        _existingTopics = new List<string>();
+        using var conn = new NpgsqlConnection(_connectionString);
+        conn.Open();
 
-    private static readonly string TABLE_TEMPLATE = @"
+        using var cmd = new NpgsqlCommand(@"
+                            SELECT table_name
+                            FROM information_schema.tables
+                            WHERE table_schema = 'public'
+                            AND table_type = 'BASE TABLE'
+                            ORDER BY table_name;", conn);
+
+        using var reader = cmd.ExecuteReader();
+
+        while (reader.Read()) {
+            if (!reader.IsDBNull(0)) {
+                _existingTopics.Add(reader.GetString(0));
+            }
+        }
+    }
+
+    private async Task _createTable(string topic) {
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        string TABLE_TEMPLATE = @"
             CREATE TABLE IF NOT EXISTS @topic (
                 id SERIAL PRIMARY KEY,
                 temperature DOUBLE PRECISION,
                 humidity DOUBLE PRECISION,
                 time BIGINT
             );";
-    public PostgresService() {
-        // using var conn = new NpgsqlConnection(_connectionString);
-        // conn.Open();
-        // using var cmd = new NpgsqlCommand(@"
-        //     CREATE TABLE IF NOT EXISTS sensor_readings (
-        //         id SERIAL PRIMARY KEY,
-        //         temperature DOUBLE PRECISION,
-        //         humidity DOUBLE PRECISION,
-        //         time BIGINT
-        //     );", conn);
-        // cmd.ExecuteNonQuery();
+        var tableExistsCmd = new NpgsqlCommand(TABLE_TEMPLATE.Replace("@topic", topic.formatTopicForDB()), conn); //Npg does not allow dynamic table names
+        await tableExistsCmd.ExecuteNonQueryAsync();
     }
-
     public async Task SaveSensorDataAsync(string topic, SensorData data) {
-        if (topic is null) return;
-        if (data.temperature == 0.0 ||
-            data.temperature == 32.0 ||
-            data.humidity == 0 ||
-            data.time < DateTimeOffset.UtcNow.ToUnixTimeSeconds() - _rejectTimePeriod) {
+        if (topic is null)
             return;
-        } //avoid inserting bad data into db
-        topic = topic.Replace("/", "_");
+        if (!data.isValidSensorData()) {
+            return;
+        }
+        if (!_existingTopics.Contains(topic)) {
+            await _createTable(topic);
+            _existingTopics.Add(topic);
+        }
+
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
-        var tableExistsCmd = new NpgsqlCommand(TABLE_TEMPLATE.Replace("@topic", topic), conn); //Npg does not allow dynamic table names
-        await tableExistsCmd.ExecuteNonQueryAsync();
 
         var cmd = new NpgsqlCommand($@"
             INSERT INTO {topic} (temperature, humidity, time)
@@ -51,55 +65,76 @@ public class PostgresService {
         await cmd.ExecuteNonQueryAsync();
     }
 
-    public async Task<List<SensorData>> GetRecentAsync(string topic, int? limit, long? start, long? stop) {
-        topic = topic.Replace("/", "_");
+    public async Task<List<SensorData>> GetSensorDataAsync(string topic, uint? limit, long? start, long? stop) {
         var results = new List<SensorData>();
-
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        using var cmd = new NpgsqlCommand($@"SELECT temperature, humidity, time FROM {topic}
+        string sql;
+        if (limit is not null || (start is null && stop is null)) {
+            sql = $@"SELECT temperature, humidity, time FROM {topic.formatTopicForDB()}
                                     WHERE 1=1 
                                     AND (time >= @start OR @start IS NULL)
                                     AND (time <= @stop OR @stop IS NULL)
                                     ORDER BY time
-                                    ;", conn);
+                                    LIMIT @limit
+                                    ;";
+        } else {
+            sql = $@"SELECT temperature, humidity, time FROM {topic.formatTopicForDB()}
+                                    WHERE 1=1 
+                                    AND (time >= @start OR @start IS NULL)
+                                    AND (time <= @stop OR @stop IS NULL)
+                                    ORDER BY time
+                                    ;";
+        }
+        using var cmd = new NpgsqlCommand(sql, conn);
+        if (limit is not null || (start is null && stop is null)) {
+            limit = limit ?? _defaultDBLimit;
+            cmd.Parameters.AddWithValue("@limit", limit);
+        }
 
         cmd.Parameters.AddWithValue("@start", (object?)start ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@stop", (object?)stop ?? DBNull.Value);
 
-        var reader = await cmd.ExecuteReaderAsync();
+        await using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync()) {
-            results.Add(new SensorData {
-                temperature = reader.GetDouble(0),
-                humidity = reader.GetDouble(1),
-                time = reader.GetInt64(2)
-            });
+            results.Add(new SensorData(
+              reader.GetDouble(0),
+            reader.GetDouble(1),
+              reader.GetInt64(2)
+            ));
         }
 
         return results;
     }
 
-    public async Task<long> GetOldestEntry(string topic) {
-        topic = topic.Replace("/", "_");
+    public async Task<TopicMetaDataDto> GetTopicMetaDataAsync(string topic) {
+        if (!_existingTopics.Contains(topic)) {
+            throw new ArgumentException($"Topic {topic} does not exist");
+        }
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        using var cmd = new NpgsqlCommand($@"SELECT min(time) FROM {topic}
+        using var cmd = new NpgsqlCommand($@"SELECT MIN(time), MAX(time) FROM {topic.formatTopicForDB()}
                                     ;", conn);
-        var reader = await cmd.ExecuteReaderAsync();
-        long results = -1;
+        await using var reader = await cmd.ExecuteReaderAsync();
+        long min = 0;
+        long max = 0;
         if (await reader.ReadAsync()) {
             if (!reader.IsDBNull(0)) {
-                results = reader.GetInt64(0);
+                min = reader.GetInt64(0);
+
+            }
+            if (!reader.IsDBNull(1)) {
+                max = reader.GetInt64(1);
             }
         }
 
-        return results;
+        return new TopicMetaDataDto(min, max);
     }
 
-    public async Task<List<string>> GetTopicList() {
+    public async Task<List<string>> GetTopicsAsync() {
 
         var tableNames = new List<string>();
 
@@ -113,7 +148,7 @@ public class PostgresService {
                                 AND table_type = 'BASE TABLE'
                                 ORDER BY table_name;", conn);
 
-        using var reader = cmd.ExecuteReader();
+        await using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync()) {
             if (!reader.IsDBNull(0)) {
@@ -124,4 +159,6 @@ public class PostgresService {
         return tableNames;
 
     }
+
+
 }

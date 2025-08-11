@@ -11,9 +11,9 @@ interface Props {
 export default function OverviewGrid({ gridElements }: Props) {
   return (
     <div className="grid grid-cols-3">
-      {gridElements.map((item) => {
+      {gridElements.map((item, index) => {
         return (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" key={index}>
             <p>{item.topic}</p>
             <CurrentDataBox current={item.data} />
           </div>
