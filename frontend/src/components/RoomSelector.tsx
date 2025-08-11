@@ -19,7 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { stateTuple } from "./utils";
+import { stateTuple } from "../lib/utils";
 
 export type RoomSelectorRoomType = { value: string; label: string };
 

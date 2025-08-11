@@ -2,10 +2,7 @@
 import dynamic from "next/dynamic";
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
 
-import {
-  type TempData,
-  type CalculatedDataPoints,
-} from "./CalandarGraphWrapper";
+import { type TempData, type CalculatedDataPoints } from "@/lib/types";
 import { useTheme } from "next-themes";
 
 interface Props {

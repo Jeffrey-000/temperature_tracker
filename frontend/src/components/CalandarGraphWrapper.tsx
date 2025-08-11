@@ -4,7 +4,7 @@ import { type DateRange } from "react-day-picker";
 import CustomCalendar from "@/components/calendars/CustomCalendar";
 import Graph from "@/components/Graph";
 import { getPresets } from "@/components/calendars/CustomCalendar";
-import { toEpochTimeInSec } from "./utils";
+import { toEpochTimeInSec } from "../lib/utils";
 import { RoomSelector, RoomSelectorRoomType } from "./RoomSelector";
 import {
   Drawer,
@@ -13,26 +13,10 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import CurrentDataBox from "./CurrentDataBox";
+import { TempData, disabledDatesType, CalculatedDataPoints } from "@/lib/types";
 
 type TempJson = [{ temperature: number; humidity: number; time: number }];
-export type TempData = {
-  temperature: number;
-  humidity: number;
-  time: Date;
-};
-export type disabledDatesType = {
-  before?: Date;
-  after?: Date;
-  dates?: Date[];
-};
-
-export type CalculatedDataPoints = {
-  current: TempData | null;
-  maxTemp: TempData | null;
-  minTemp: TempData | null;
-  maxHumidity: TempData | null;
-  minHumidity: TempData | null;
-};
 
 export default function CalandarGraphWrapper() {
   const presets = getPresets();
@@ -163,13 +147,13 @@ export default function CalandarGraphWrapper() {
         disabledDates={disabledDates}
       ></CustomCalendar>
       <div className="w-full px-10 flex flex-col items-center justify-between pt-2">
-        <Graph
+        {/* <Graph
           title={selectorValue
             .substring("sensors/temperature/".length) //cuts off front
             .replace("_", "/")}
           data={data}
           calculatedDataPoints={calculatedDataPoints}
-        />
+        /> */}
       </div>
       {<TemperatureWidget data={calculatedDataPoints} />}
     </div>
@@ -191,14 +175,7 @@ function TemperatureWidget({ data }: { data: CalculatedDataPoints }) {
           className="fixed bottom-6 right-6 z-50 rounded-lg bg-blue-600 px-6 py-4 text-white shadow-lg hover:bg-blue-700 transition"
           aria-label="Open Temperature and Humidity Drawer"
         >
-          <div className="flex flex-col items-center space-y-1">
-            <span className="text-lg font-bold">
-              🌡 {current?.temperature.toFixed(1)}°F
-            </span>
-            <span className="text-sm opacity-80">
-              💧 {current?.humidity.toFixed(1)}%
-            </span>
-          </div>
+          <CurrentDataBox current={current} />
         </button>
       </DrawerTrigger>
 
