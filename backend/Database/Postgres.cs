@@ -110,7 +110,8 @@ public class PostgresService {
                                 SELECT table_name
                                 FROM information_schema.tables
                                 WHERE table_schema = 'public'
-                                AND table_type = 'BASE TABLE';", conn);
+                                AND table_type = 'BASE TABLE'
+                                ORDER BY table_name;", conn);
 
         using var reader = cmd.ExecuteReader();
 
