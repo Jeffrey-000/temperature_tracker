@@ -2,16 +2,16 @@
 import dynamic from "next/dynamic";
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
 
-import { type SensorData, type CalculatedDataPoints } from "@/lib/types";
+import { type SensorData, type TopicStats } from "@/lib/types";
 import { useTheme } from "next-themes";
 
 interface Props {
   data: SensorData[] | undefined;
   title: string;
-  calculatedDataPoints?: CalculatedDataPoints;
+  topicStats?: TopicStats;
 }
 // eslint-disable-next-line
-export default function Graph({ data, title, calculatedDataPoints }: Props) {
+export default function Graph({ data, title, topicStats }: Props) {
   const { theme } = useTheme();
 
   return (
@@ -27,13 +27,13 @@ export default function Graph({ data, title, calculatedDataPoints }: Props) {
           name: "Temperature",
         },
         // {
-        //   x: calculatedDataPoints
-        //     ? Object.values(calculatedDataPoints).map((reading) =>
+        //   x: topicStats
+        //     ? Object.values(topicStats).map((reading) =>
         //         reading ? reading.time : null
         //       )
         //     : [],
-        //   y: calculatedDataPoints
-        //     ? Object.values(calculatedDataPoints).map((reading) =>
+        //   y: topicStats
+        //     ? Object.values(topicStats).map((reading) =>
         //         reading ? reading.temperature : null
         //       )
         //     : [],
@@ -41,8 +41,8 @@ export default function Graph({ data, title, calculatedDataPoints }: Props) {
         //   mode: "text+markers",
         //   marker: { color: "red", size: 5 },
         //   text:
-        //     //calculatedDataPoints
-        //     //   ? Object.entries(calculatedDataPoints).map(([key, value]) => {
+        //     //topicStats
+        //     //   ? Object.entries(topicStats).map(([key, value]) => {
         //     //       if (!value) {
         //     //         return "";
         //     //       }
@@ -50,7 +50,7 @@ export default function Graph({ data, title, calculatedDataPoints }: Props) {
         //     //         return "Latest";
         //     //       }
         //     //       if (key.includes("Temp")) {
-        //     //         if (value.time === calculatedDataPoints.current?.time) {
+        //     //         if (value.time === topicStats.current?.time) {
         //     //           return "";
         //     //         }
         //     //         return `${value.temperature.toFixed(1)}°F`;

@@ -1,42 +1,28 @@
-export type SensorData = {
-  temperature: number;
-  humidity: number;
-  time: Date;
-};
 export type disabledDatesType = {
   before?: Date;
   after?: Date;
   dates?: Date[];
 };
 
-export type CalculatedDataPoints = {
+type SensorDataDB = {
+  temperature: number;
+  humidity: number;
+  time: number;
+};
+export type SensorData = Omit<SensorDataDB, "time"> & { time: Date };
+
+export type TopicStats = {
   current: SensorData;
   maxTemp: SensorData[];
   minTemp: SensorData[];
   maxHumidity: SensorData[];
   minHumidity: SensorData[];
 };
-export type CalculatedDataPointsDB = {
+export type TopicStatsDB = {
   current: SensorDataDB;
   maxTemp: SensorDataDB[];
   minTemp: SensorDataDB[];
   maxHumidity: SensorDataDB[];
   minHumidity: SensorDataDB[];
 };
-export type TopicStats = {
-  current: SensorData;
-  max: Max;
-  min: Min;
-};
-
-type Max = {
-  temperature: SensorData;
-  humidity: SensorData;
-};
-
-type Min = {
-  temperature: SensorData;
-  humidity: SensorData;
-};
-
-type SensorDataDB = SensorData & { time: number };
+export type TopicMetaDataDto = { start: number; end: number };

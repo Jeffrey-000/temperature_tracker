@@ -21,14 +21,12 @@ import {
 
 import { stateTuple } from "../lib/utils";
 
-export type RoomSelectorRoomType = { value: string; label: string };
-
 type Props = {
-  rooms: RoomSelectorRoomType[];
+  topicList: string[];
   valueState: stateTuple<string>;
 };
 
-export function RoomSelector({ rooms, valueState }: Props) {
+export function TopicSelector({ topicList, valueState }: Props) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = valueState;
 
@@ -42,7 +40,7 @@ export function RoomSelector({ rooms, valueState }: Props) {
           className="w-min-[200px] justify-between"
         >
           {value
-            ? rooms.find((room) => room.value === value)?.label
+            ? topicList.find((topic) => topic === value)
             : "Select room..."}
           <ChevronsUpDown className="opacity-50" />
         </Button>
@@ -53,20 +51,20 @@ export function RoomSelector({ rooms, valueState }: Props) {
           <CommandList>
             <CommandEmpty>No room found.</CommandEmpty>
             <CommandGroup>
-              {rooms.map((room) => (
+              {topicList.map((topic) => (
                 <CommandItem
-                  key={room.value}
-                  value={room.value}
+                  key={topic}
+                  value={topic}
                   onSelect={(currentValue) => {
                     setValue(currentValue === value ? "" : currentValue);
                     setOpen(false);
                   }}
                 >
-                  {room.label}
+                  {topic}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === room.value ? "opacity-100" : "opacity-0"
+                      value === topic ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>
