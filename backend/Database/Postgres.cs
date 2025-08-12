@@ -5,7 +5,7 @@ namespace MQTT.Database;
 
 public class PostgresService {
     private readonly string _connectionString = SECRETS.SECRETS.POSTGRES_URL;
-    private const uint _defaultDBLimit = 10 * 60 * 24;
+    private const int _defaultDBLimit = 10 * 60 * 24;
     private List<string> _existingTopics;
     public PostgresService() {
         _existingTopics = new List<string>();
@@ -42,9 +42,10 @@ public class PostgresService {
         await tableExistsCmd.ExecuteNonQueryAsync();
     }
     public async Task SaveSensorDataAsync(string topic, SensorData data) {
-        if (topic is null)
+        if (topic is null) {
             return;
-        if (!data.isValidSensorData()) {
+        }
+        if (data.isInvalidSensorData()) {
             return;
         }
         if (!_existingTopics.Contains(topic)) {
@@ -62,10 +63,12 @@ public class PostgresService {
         cmd.Parameters.AddWithValue("@hum", data.humidity);
         cmd.Parameters.AddWithValue("@time", data.time);
 
+
         await cmd.ExecuteNonQueryAsync();
+
     }
 
-    public async Task<List<SensorData>> GetSensorDataAsync(string topic, uint? limit, long? start, long? stop) {
+    public async Task<List<SensorData>> GetSensorDataAsync(string topic, int? limit, long? start, long? stop) {
         var results = new List<SensorData>();
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
@@ -158,6 +161,26 @@ public class PostgresService {
 
         return tableNames;
 
+    }
+
+    public async Task<string> GetStatistics(string topic, long? start, long? stop) {
+        if (!_existingTopics.Contains(topic)) {
+            throw new ArgumentException($"Topic {topic} does not exist");
+        }
+        await using var conn = new NpgsqlConnection(_connectionString);
+        await conn.OpenAsync();
+        using var cmd = new NpgsqlCommand(DBHelperClass._magic_chatGPT_one_pass_topic_stats_sql_str.Replace("@topic", topic), conn);
+
+        cmd.Parameters.AddWithValue("@start", (object?)start ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@stop", (object?)stop ?? DBNull.Value);
+
+        var jason = (await cmd.ExecuteScalarAsync())?.ToString();
+
+        if (string.IsNullOrEmpty(jason)) {
+            throw new NullReferenceException("DB did not return a valid json.");
+        }
+
+        return jason;
     }
 
 

@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect, useMemo } from "react";
 import { type DateRange } from "react-day-picker";
 import CustomCalendar from "@/components/calendars/CustomCalendar";
@@ -14,9 +15,11 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import CurrentDataBox from "./CurrentDataBox";
-import { TempData, disabledDatesType, CalculatedDataPoints } from "@/lib/types";
-
-type TempJson = [{ temperature: number; humidity: number; time: number }];
+import {
+  SensorData,
+  disabledDatesType,
+  CalculatedDataPoints,
+} from "@/lib/types";
 
 export default function CalandarGraphWrapper() {
   const presets = getPresets();
@@ -24,11 +27,13 @@ export default function CalandarGraphWrapper() {
     from: presets[0].from,
     to: presets[0].to,
   });
-  const [data, setData] = useState<TempData[] | undefined>(undefined);
+  const [data, setData] = useState<SensorData[] | undefined>(undefined);
   const [disabledDates, setDisabledDates] = useState<disabledDatesType>();
   const [selectorValue, setSelectorValue] = useState<string>("");
 
   const [selectorData, setSelectorData] = useState<RoomSelectorRoomType[]>([]);
+  // const [calculatedDataPoints, setCalculatedDataPoints] =
+  //   useState<CalculatedDataPoints>();
 
   useEffect(() => {
     async function fetchData() {
@@ -44,7 +49,7 @@ export default function CalandarGraphWrapper() {
       );
       if (!response.ok) return;
       const jason = await response.json();
-      const data = parseTempData(jason);
+      const data = parseSensorData(jason);
       if (data == undefined) return;
       setData(data);
       //console.log(data.temps.length);
@@ -91,7 +96,16 @@ export default function CalandarGraphWrapper() {
     }
     fetchValidDates();
     fetchSelectorData();
-  }, []);
+  }, [selectorValue]);
+
+  // useEffect(() => {
+  //   async function getstats() {
+  //     const response = await fetch(`/api/data/${selectorValue}/statistics`);
+  //     const jason = await response.json();
+  //     setCalculatedDataPoints(jason);
+  //   }
+  //   getstats();
+  // }, [selectorValue]);
 
   const calculatedDataPoints: CalculatedDataPoints =
     useMemo((): CalculatedDataPoints => {
@@ -158,14 +172,17 @@ export default function CalandarGraphWrapper() {
     </div>
   );
 }
-
-function parseTempData(json: TempJson): TempData[] {
+type TempJson = { temperature: number; humidity: number; time: number }[];
+function parseSensorData(json: TempJson): SensorData[] {
   return json.map((item) => {
     return { ...item, time: new Date(item.time * 1000) };
   });
 }
 
-function TemperatureWidget({ data }: { data: CalculatedDataPoints }) {
+function TemperatureWidget({ data }: { data?: CalculatedDataPoints }) {
+  if (!data) {
+    return;
+  }
   const { current, maxTemp, minTemp, maxHumidity, minHumidity } = data;
   return (
     <Drawer>

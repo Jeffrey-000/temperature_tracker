@@ -1,9 +1,9 @@
 import CurrentDataBox from "./CurrentDataBox";
-import { type TempData } from "@/lib/types";
+import { type SensorData } from "@/lib/types";
 
 type OverviewGridElement = {
   topic: string;
-  data: TempData;
+  data: SensorData;
 };
 interface Props {
   gridElements: OverviewGridElement[];

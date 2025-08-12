@@ -2,13 +2,13 @@
 import dynamic from "next/dynamic";
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
 
-import { type TempData, type CalculatedDataPoints } from "@/lib/types";
+import { type SensorData, type CalculatedDataPoints } from "@/lib/types";
 import { useTheme } from "next-themes";
 
 interface Props {
-  data: TempData[] | undefined;
+  data: SensorData[] | undefined;
   title: string;
-  calculatedDataPoints: CalculatedDataPoints;
+  calculatedDataPoints?: CalculatedDataPoints;
 }
 
 export default function Graph({ data, title, calculatedDataPoints }: Props) {

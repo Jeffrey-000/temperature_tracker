@@ -31,9 +31,11 @@ public class TopicsController : ControllerBase {
             var metaData = await _db.GetTopicMetaDataAsync(topic);
             return Ok(metaData);
         } catch (ArgumentException e) {
+            Console.WriteLine(e);
             return NotFound(new {
                 message = e.Message
             });
         }
     }
+
 }

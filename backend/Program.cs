@@ -19,23 +19,24 @@ var app = builder.Build();
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 app.MapControllers();
 
-app.UseExceptionHandler(errorApp => { //global exveption handler
-    errorApp.Run(async context => {
-        context.Response.StatusCode = 500;
-        context.Response.ContentType = "application/json";
+// app.UseExceptionHandler(errorApp => { //global exveption handler
+//     errorApp.Run(async context => {
+//         context.Response.StatusCode = 500;
+//         context.Response.ContentType = "application/json";
 
-        var errorFeature = context.Features.Get<IExceptionHandlerFeature>();
-        if (errorFeature != null) {
-            var exception = errorFeature.Error;
-            logger.LogError(exception, "Unhandled exception occurred.");
+//         var errorFeature = context.Features.Get<IExceptionHandlerFeature>();
+//         if (errorFeature != null) {
+//             var exception = errorFeature.Error;
+//             Console.WriteLine(exception);
+//             logger.LogError(exception, "Unhandled exception occurred.");
 
-            var err = new {
-                message = "An internal server error occurred."
-            };
-            await context.Response.WriteAsJsonAsync(err);
-        }
-    });
-});
+//             var err = new {
+//                 message = "An internal server error occurred."
+//             };
+//             await context.Response.WriteAsJsonAsync(err);
+//         }
+//     });
+// });
 
 
 app.Run();

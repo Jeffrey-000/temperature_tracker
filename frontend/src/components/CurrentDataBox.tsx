@@ -1,7 +1,7 @@
-import { TempData } from "@/lib/types";
+import { SensorData } from "@/lib/types";
 
 interface Props {
-  current: TempData | null;
+  current: SensorData | null;
 }
 
 export default function CurrentDataBox({ current }: Props) {

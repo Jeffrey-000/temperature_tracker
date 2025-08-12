@@ -1,4 +1,4 @@
-export type TempData = {
+export type SensorData = {
   temperature: number;
   humidity: number;
   time: Date;
@@ -10,25 +10,25 @@ export type disabledDatesType = {
 };
 
 export type CalculatedDataPoints = {
-  current: TempData | null;
-  maxTemp: TempData | null;
-  minTemp: TempData | null;
-  maxHumidity: TempData | null;
-  minHumidity: TempData | null;
+  current: SensorData | null;
+  maxTemp: SensorData | null;
+  minTemp: SensorData | null;
+  maxHumidity: SensorData | null;
+  minHumidity: SensorData | null;
 };
 
-// public class TopicStats {
-//     public required SensorData current { get; set; }
-//     public required Max max { get; set; }
-//     public required Min min { get; set; }
+export type TopicStats = {
+  current: SensorData;
+  max: Max;
+  min: Min;
+};
 
-// }
+type Max = {
+  temperature: SensorData;
+  humidity: SensorData;
+};
 
-// public class Max {
-//     public required SensorData temperature { get; set; }
-//     public required SensorData humidity { get; set; }
-// }
-// public class Min {
-//     public required SensorData temperature { get; set; }
-//     public required SensorData humidity { get; set; }
-// }
+type Min = {
+  temperature: SensorData;
+  humidity: SensorData;
+};
