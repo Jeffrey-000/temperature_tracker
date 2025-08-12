@@ -10,7 +10,7 @@ interface Props {
   title: string;
   calculatedDataPoints?: CalculatedDataPoints;
 }
-
+// eslint-disable-next-line
 export default function Graph({ data, title, calculatedDataPoints }: Props) {
   const { theme } = useTheme();
 
@@ -26,45 +26,45 @@ export default function Graph({ data, title, calculatedDataPoints }: Props) {
           line: { color: "#BB86FC" },
           name: "Temperature",
         },
-        {
-          x: calculatedDataPoints
-            ? Object.values(calculatedDataPoints).map((reading) =>
-                reading ? reading.time : null
-              )
-            : [],
-          y: calculatedDataPoints
-            ? Object.values(calculatedDataPoints).map((reading) =>
-                reading ? reading.temperature : null
-              )
-            : [],
-          type: "scatter",
-          mode: "text+markers",
-          marker: { color: "red", size: 5 },
-          text:
-            //calculatedDataPoints
-            //   ? Object.entries(calculatedDataPoints).map(([key, value]) => {
-            //       if (!value) {
-            //         return "";
-            //       }
-            //       if (key.includes("current")) {
-            //         return "Latest";
-            //       }
-            //       if (key.includes("Temp")) {
-            //         if (value.time === calculatedDataPoints.current?.time) {
-            //           return "";
-            //         }
-            //         return `${value.temperature.toFixed(1)}°F`;
-            //       }
-            //       if (key.includes("Humidity")) {
-            //         return `${value.humidity.toFixed(1)}%`;
-            //       }
-            //       return "";
-            //     })
-            //   :
-            undefined,
-          textposition: "top center",
-          showlegend: false,
-        },
+        // {
+        //   x: calculatedDataPoints
+        //     ? Object.values(calculatedDataPoints).map((reading) =>
+        //         reading ? reading.time : null
+        //       )
+        //     : [],
+        //   y: calculatedDataPoints
+        //     ? Object.values(calculatedDataPoints).map((reading) =>
+        //         reading ? reading.temperature : null
+        //       )
+        //     : [],
+        //   type: "scatter",
+        //   mode: "text+markers",
+        //   marker: { color: "red", size: 5 },
+        //   text:
+        //     //calculatedDataPoints
+        //     //   ? Object.entries(calculatedDataPoints).map(([key, value]) => {
+        //     //       if (!value) {
+        //     //         return "";
+        //     //       }
+        //     //       if (key.includes("current")) {
+        //     //         return "Latest";
+        //     //       }
+        //     //       if (key.includes("Temp")) {
+        //     //         if (value.time === calculatedDataPoints.current?.time) {
+        //     //           return "";
+        //     //         }
+        //     //         return `${value.temperature.toFixed(1)}°F`;
+        //     //       }
+        //     //       if (key.includes("Humidity")) {
+        //     //         return `${value.humidity.toFixed(1)}%`;
+        //     //       }
+        //     //       return "";
+        //     //     })
+        //     //   :
+        //     undefined,
+        //   textposition: "top center",
+        //   showlegend: false,
+        // },
       ]}
       layout={{
         title: { text: title },

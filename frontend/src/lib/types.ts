@@ -10,13 +10,19 @@ export type disabledDatesType = {
 };
 
 export type CalculatedDataPoints = {
-  current: SensorData | null;
-  maxTemp: SensorData | null;
-  minTemp: SensorData | null;
-  maxHumidity: SensorData | null;
-  minHumidity: SensorData | null;
+  current: SensorData;
+  maxTemp: SensorData[];
+  minTemp: SensorData[];
+  maxHumidity: SensorData[];
+  minHumidity: SensorData[];
 };
-
+export type CalculatedDataPointsDB = {
+  current: SensorDataDB;
+  maxTemp: SensorDataDB[];
+  minTemp: SensorDataDB[];
+  maxHumidity: SensorDataDB[];
+  minHumidity: SensorDataDB[];
+};
 export type TopicStats = {
   current: SensorData;
   max: Max;
@@ -32,3 +38,5 @@ type Min = {
   temperature: SensorData;
   humidity: SensorData;
 };
+
+type SensorDataDB = SensorData & { time: number };

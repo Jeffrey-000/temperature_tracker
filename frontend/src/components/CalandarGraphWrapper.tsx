@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { type DateRange } from "react-day-picker";
 import CustomCalendar from "@/components/calendars/CustomCalendar";
 import Graph from "@/components/Graph";
@@ -19,6 +18,7 @@ import {
   SensorData,
   disabledDatesType,
   CalculatedDataPoints,
+  CalculatedDataPointsDB,
 } from "@/lib/types";
 
 export default function CalandarGraphWrapper() {
@@ -32,8 +32,8 @@ export default function CalandarGraphWrapper() {
   const [selectorValue, setSelectorValue] = useState<string>("");
 
   const [selectorData, setSelectorData] = useState<RoomSelectorRoomType[]>([]);
-  // const [calculatedDataPoints, setCalculatedDataPoints] =
-  //   useState<CalculatedDataPoints>();
+  const [calculatedDataPoints, setCalculatedDataPoints] =
+    useState<CalculatedDataPoints>();
 
   useEffect(() => {
     async function fetchData() {
@@ -65,6 +65,9 @@ export default function CalandarGraphWrapper() {
   useEffect(() => {
     async function fetchValidDates() {
       const response = await fetch(`/api/topics/${selectorValue}/metadata`);
+      if (!response.ok) {
+        return;
+      }
       const timestr = await response.json();
       setDisabledDates({
         before: new Date(Number(timestr.start) * 1000),
@@ -98,56 +101,43 @@ export default function CalandarGraphWrapper() {
     fetchSelectorData();
   }, [selectorValue]);
 
-  // useEffect(() => {
-  //   async function getstats() {
-  //     const response = await fetch(`/api/data/${selectorValue}/statistics`);
-  //     const jason = await response.json();
-  //     setCalculatedDataPoints(jason);
-  //   }
-  //   getstats();
-  // }, [selectorValue]);
-
-  const calculatedDataPoints: CalculatedDataPoints =
-    useMemo((): CalculatedDataPoints => {
-      if (!data || data.length === 0) {
-        return {
-          current: null,
-          maxTemp: null,
-          minTemp: null,
-          maxHumidity: null,
-          minHumidity: null,
-        };
+  useEffect(() => {
+    async function getstats() {
+      const response = await fetch(`/api/data/${selectorValue}/statistics`);
+      if (!response.ok) {
+        return;
       }
+      const jason: CalculatedDataPointsDB = await response.json();
+      console.log(jason);
 
-      const last = data[data.length - 1];
-
-      const result = data.reduce(
-        (acc, item) => {
-          return {
-            maxTemp:
-              item.temperature > acc.maxTemp.temperature ? item : acc.maxTemp,
-            minTemp:
-              item.temperature < acc.minTemp.temperature ? item : acc.minTemp,
-            maxHumidity:
-              item.humidity > acc.maxHumidity.humidity ? item : acc.maxHumidity,
-            minHumidity:
-              item.humidity < acc.minHumidity.humidity ? item : acc.minHumidity,
-          };
+      setCalculatedDataPoints({
+        current: {
+          ...jason.current,
+          time: new Date(jason.current.time * 1000),
         },
-        {
-          maxTemp: data[0],
-          minTemp: data[0],
-          maxHumidity: data[0],
-          minHumidity: data[0],
-        }
-      );
+        maxTemp: jason.maxTemp.map((item) => ({
+          ...item,
+          time: new Date(item.time * 1000),
+        })),
 
-      return {
-        current: last,
+        minTemp: jason.maxTemp.map((item) => ({
+          ...item,
+          time: new Date(item.time * 1000),
+        })),
 
-        ...result,
-      };
-    }, [data]);
+        maxHumidity: jason.maxHumidity.map((item) => ({
+          ...item,
+          time: new Date(item.time * 1000),
+        })),
+
+        minHumidity: jason.minHumidity.map((item) => ({
+          ...item,
+          time: new Date(item.time * 1000),
+        })),
+      });
+    }
+    getstats();
+  }, [selectorValue]);
 
   return (
     <div className="container flex flex-col items-center max-w-[100vw] ">
@@ -168,7 +158,9 @@ export default function CalandarGraphWrapper() {
           calculatedDataPoints={calculatedDataPoints}
         />
       </div>
-      {<TemperatureWidget data={calculatedDataPoints} />}
+      {calculatedDataPoints && (
+        <TemperatureWidget data={calculatedDataPoints} />
+      )}
     </div>
   );
 }
@@ -179,10 +171,7 @@ function parseSensorData(json: TempJson): SensorData[] {
   });
 }
 
-function TemperatureWidget({ data }: { data?: CalculatedDataPoints }) {
-  if (!data) {
-    return;
-  }
+function TemperatureWidget({ data }: { data: CalculatedDataPoints }) {
   const { current, maxTemp, minTemp, maxHumidity, minHumidity } = data;
   return (
     <Drawer>
@@ -206,24 +195,24 @@ function TemperatureWidget({ data }: { data?: CalculatedDataPoints }) {
           <div className="flex flex-col space-y-2">
             <h3 className="text-lg font-semibold">Temperature (°F)</h3>
             <div className="flex justify-between text-sm text-gray-700">
-              <span>{`Max: ${maxTemp?.temperature.toFixed(1)}`}</span>
-              <span>{`(${maxTemp?.time.toLocaleString()})`}</span>
+              <span>{`Max: ${maxTemp[0]?.temperature.toFixed(1)}`}</span>
+              <span>{`(${maxTemp[0]?.time.toLocaleString()})`}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-700">
-              <span>{`Min: ${minTemp?.temperature.toFixed(1)}`}</span>
-              <span>{`(${minTemp?.time.toLocaleString()})`}</span>
+              <span>{`Min: ${minTemp[0]?.temperature.toFixed(1)}`}</span>
+              <span>{`(${minTemp[0]?.time.toLocaleString()})`}</span>
             </div>
           </div>
 
           <div className="flex flex-col space-y-2">
             <h3 className="text-lg font-semibold">Humidity (%)</h3>
             <div className="flex justify-between text-sm text-gray-700">
-              <span>{`Max: ${maxHumidity?.humidity.toFixed(1)}`}</span>
-              <span>{`(${maxHumidity?.time.toLocaleString()})`}</span>
+              <span>{`Max: ${maxHumidity[0]?.humidity.toFixed(1)}`}</span>
+              <span>{`(${maxHumidity[0]?.time.toLocaleString()})`}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-700">
-              <span>{`Min: ${minHumidity?.humidity.toFixed(1)}`}</span>
-              <span>{`(${minHumidity?.time.toLocaleString()})`}</span>
+              <span>{`Min: ${minHumidity[0]?.humidity.toFixed(1)}`}</span>
+              <span>{`(${minHumidity[0]?.time.toLocaleString()})`}</span>
             </div>
           </div>
         </div>

@@ -31,41 +31,52 @@ public static class DBHelperClass {
             (time >= @start OR @start IS NULL)
             AND (time <= @stop OR @stop IS NULL)
     ),
-    combined AS (
-        SELECT 'current' AS label, temperature, humidity, time
-        FROM ranked
-        WHERE r_current = 1
+combined AS (
+    SELECT 'maxTemp' AS label, temperature, humidity, time
+    FROM ranked
+    WHERE r_maxTemp = 1
 
-        UNION ALL
-        SELECT 'maxTemp', temperature, humidity, time
-        FROM ranked
-        WHERE r_maxTemp = 1
+    UNION ALL
+    SELECT 'minTemp', temperature, humidity, time
+    FROM ranked
+    WHERE r_minTemp = 1
 
-        UNION ALL
-        SELECT 'minTemp', temperature, humidity, time
-        FROM ranked
-        WHERE r_minTemp = 1
+    UNION ALL
+    SELECT 'maxHumidity', temperature, humidity, time
+    FROM ranked
+    WHERE r_maxHumidity = 1
 
-        UNION ALL
-        SELECT 'maxHumidity', temperature, humidity, time
-        FROM ranked
-        WHERE r_maxHumidity = 1
-
-        UNION ALL
-        SELECT 'minHumidity', temperature, humidity, time
-        FROM ranked
-        WHERE r_minHumidity = 1
-    )
-    SELECT jsonb_object_agg(label, rows) AS result
-    FROM (
-        SELECT label, jsonb_agg(jsonb_build_object(
-            'temperature', temperature,
-            'humidity', humidity,
-            'time', time
-        ) ORDER BY time DESC) AS rows
-        FROM combined
-        GROUP BY label
-    ) t;
+    UNION ALL
+    SELECT 'minHumidity', temperature, humidity, time
+    FROM ranked
+    WHERE r_minHumidity = 1
+),
+aggregated AS (
+    SELECT label, jsonb_agg(jsonb_build_object(
+        'temperature', temperature,
+        'humidity', humidity,
+        'time', time
+    ) ORDER BY time DESC) AS rows
+    FROM combined
+    GROUP BY label
+),
+current AS (
+    SELECT jsonb_build_object(
+        'temperature', temperature,
+        'humidity', humidity,
+        'time', time
+    ) AS single_row
+    FROM ranked
+    WHERE r_current = 1
+    LIMIT 1
+)
+SELECT jsonb_build_object(
+    'current', (SELECT single_row FROM current),
+    'maxTemp', (SELECT rows FROM aggregated WHERE label = 'maxTemp'),
+    'minTemp', (SELECT rows FROM aggregated WHERE label = 'minTemp'),
+    'maxHumidity', (SELECT rows FROM aggregated WHERE label = 'maxHumidity'),
+    'minHumidity', (SELECT rows FROM aggregated WHERE label = 'minHumidity')
+) AS result;
 
 ";
 }
