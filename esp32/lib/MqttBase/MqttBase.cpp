@@ -1,56 +1,26 @@
 #include <MqttBase.h>
 
 MqttBase::MqttBase(const WifiInfo &wifi, const MqttInfo &mqtt)
-    : wifiClient(),
-      mqttClient(wifiClient), wifiInfo(wifi), mqttInfo(mqtt)
+    : wifiManager(wifi),
+      mqttClient(wifiManager.getClient()), wifiInfo(wifi), mqttInfo(mqtt)
 {
 }
 
 void MqttBase::begin()
 {
-    setupWifi();
-    syncTime();
+    wifiManager.begin();
+    wifiManager.syncTime();
     mqttClient.setServer(mqttInfo.server.c_str(), mqttInfo.port);
 }
 
 void MqttBase::loop()
 {
+    wifiManager.loop();
     if (!mqttClient.connected())
     {
         reconnectToMqttServer();
     }
     mqttClient.loop();
-}
-
-void MqttBase::setupWifi()
-{
-    delay(10);
-    Serial.println();
-    Serial.print("Connecting to WiFi: ");
-    Serial.println(wifiInfo.ssid.c_str());
-
-    WiFi.begin(wifiInfo.ssid.c_str(), wifiInfo.password.c_str());
-
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-        Serial.print(".");
-    }
-
-    Serial.println("\nWiFi connected");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-}
-void MqttBase::syncTime()
-{
-    configTime(0, 0, "pool.ntp.org", "time.nist.gov");
-    Serial.println("Waiting for NTP time sync...");
-    while (time(nullptr) < 100000)
-    {
-        delay(100);
-        Serial.print(".");
-    }
-    Serial.println("\nTime synced!");
 }
 
 void MqttBase::reconnectToMqttServer()
@@ -76,8 +46,12 @@ void MqttBase::reconnectToMqttServer()
     }
 }
 
-void MqttBase::publishToTopic(SensorData data)
+bool MqttBase::publishToTopic(SensorData data)
 {
+    if (data.humidity == 0 || data.temperature == 0 || data.temperature == 32)
+    {
+        return false;
+    }
     char jsonBuffer[100];
     snprintf(jsonBuffer, sizeof(jsonBuffer),
              "{\"temperature\": %.2f, \"humidity\": %.2f, \"time\": %ld}",
@@ -87,4 +61,5 @@ void MqttBase::publishToTopic(SensorData data)
     Serial.println(jsonBuffer);
 
     mqttClient.publish(mqttInfo.topic.c_str(), jsonBuffer);
+    return true;
 }
