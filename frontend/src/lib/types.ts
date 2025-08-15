@@ -12,14 +12,14 @@ export type SensorDataDB = {
 export type SensorData = Omit<SensorDataDB, "time"> & { time: Date };
 
 export type TopicStats = {
-  current: SensorData;
+  mostRecent: SensorData;
   maxTemp: SensorData[];
   minTemp: SensorData[];
   maxHumidity: SensorData[];
   minHumidity: SensorData[];
 };
 export type TopicStatsDB = {
-  current: SensorDataDB;
+  mostRecent: SensorDataDB;
   maxTemp: SensorDataDB[];
   minTemp: SensorDataDB[];
   maxHumidity: SensorDataDB[];

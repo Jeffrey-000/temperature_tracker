@@ -100,9 +100,9 @@ export async function fetchTopicStatistics(topic: string): Promise<TopicStats> {
 
   try {
     return {
-      current: {
-        ...jason.current,
-        time: new Date(jason.current.time * 1000),
+      mostRecent: {
+        ...jason.mostRecent,
+        time: new Date(jason.mostRecent.time * 1000),
       },
       maxTemp: jason.maxTemp.map((item) => ({
         ...item,

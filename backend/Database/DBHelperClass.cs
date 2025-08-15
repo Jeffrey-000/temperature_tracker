@@ -21,7 +21,7 @@ public static class DBHelperClass {
             temperature,
             humidity,
             time,
-            RANK() OVER (ORDER BY time DESC)                    AS r_current,
+            RANK() OVER (ORDER BY time DESC)                    AS r_mostRecent,
             RANK() OVER (ORDER BY temperature DESC, time DESC)  AS r_maxTemp,
             RANK() OVER (ORDER BY temperature ASC,  time DESC)  AS r_minTemp,
             RANK() OVER (ORDER BY humidity DESC,    time DESC)  AS r_maxHumidity,
@@ -60,18 +60,18 @@ aggregated AS (
     FROM combined
     GROUP BY label
 ),
-current AS (
+mostRecent AS (
     SELECT jsonb_build_object(
         'temperature', temperature,
         'humidity', humidity,
         'time', time
     ) AS single_row
     FROM ranked
-    WHERE r_current = 1
+    WHERE r_mostRecent = 1
     LIMIT 1
 )
 SELECT jsonb_build_object(
-    'current', (SELECT single_row FROM current),
+    'mostRecent', (SELECT single_row FROM mostRecent),
     'maxTemp', (SELECT rows FROM aggregated WHERE label = 'maxTemp'),
     'minTemp', (SELECT rows FROM aggregated WHERE label = 'minTemp'),
     'maxHumidity', (SELECT rows FROM aggregated WHERE label = 'maxHumidity'),

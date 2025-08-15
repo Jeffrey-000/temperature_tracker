@@ -1,7 +1,7 @@
 namespace MQTT.Models;
 
 public record TopicStats(
-    SensorData current,
+    SensorData mostRecent,
     SensorData[] maxTemp,
     SensorData[] minTemp,
     SensorData[] maxHumidity,
