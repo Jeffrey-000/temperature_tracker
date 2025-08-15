@@ -109,7 +109,7 @@ export async function fetchTopicStatistics(topic: string): Promise<TopicStats> {
         time: new Date(item.time * 1000),
       })),
 
-      minTemp: jason.maxTemp.map((item) => ({
+      minTemp: jason.minTemp.map((item) => ({
         ...item,
         time: new Date(item.time * 1000),
       })),

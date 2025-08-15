@@ -76,6 +76,9 @@ export default function CalandarGraphWrapper() {
   }, [dateRange, selectedTopic]);
 
   useEffect(() => {
+    if (selectedTopic.length === 0) {
+      return;
+    }
     fetchValidDateRange(selectedTopic)
       .then((value) => setDisabledDates(value))
       .catch((err) => {
