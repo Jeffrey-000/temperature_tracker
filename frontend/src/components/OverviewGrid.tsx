@@ -29,7 +29,7 @@ export default function OverviewGrid() {
       {topics.map((topic) => (
         <div
           key={topic}
-          className={`flex flex-col p-4 rounded shadow transition-all duration-300
+          className={`flex flex-col p-4 rounded shadow transition-all duration-300 items-center md:items-start
                       ${gridElements[topic] ? "opacity-100" : "opacity-0"}`}
         >
           <h3>
