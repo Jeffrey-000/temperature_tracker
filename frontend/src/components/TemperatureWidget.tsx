@@ -8,13 +8,21 @@ import {
 import CurrentDataBox from "./CurrentDataBox";
 import { type TopicStats } from "@/lib/types";
 
-export default function TemperatureWidget({ data }: { data: TopicStats }) {
+export default function TemperatureWidget({
+  data,
+  fixed,
+}: {
+  data: TopicStats;
+  fixed?: boolean;
+}) {
   const { mostRecent, maxTemp, minTemp, maxHumidity, minHumidity } = data;
   return (
     <Drawer>
       <DrawerTrigger asChild>
         <button
-          className="fixed bottom-6 right-6 z-50 rounded-lg bg-blue-600 px-6 py-4 text-white shadow-lg hover:bg-blue-700 transition"
+          className={`rounded-lg bg-blue-600 px-6 py-4 text-white shadow-lg hover:bg-blue-700 transition ${
+            fixed ? "fixed bottom-6 right-6 z-50 " : ""
+          }`}
           aria-label="Open Temperature and Humidity Drawer"
         >
           <CurrentDataBox current={mostRecent} />

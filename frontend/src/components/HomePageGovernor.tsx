@@ -4,6 +4,7 @@ import NavBar from "@/components/NavBar";
 import CalandarGraphWrapper from "@/components/CalandarGraphWrapper";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import OverviewGrid from "./OverviewGrid";
 
 export default function HomePageGovernor() {
   const params = useSearchParams();
@@ -15,7 +16,7 @@ export default function HomePageGovernor() {
   return (
     <div className="container flex flex-col items-center max-w-[100vw] ">
       <NavBar pageState={[pageState, setPageState]} />
-      {pageState === "Overview" && <div>hi</div>}
+      {pageState === "Overview" && <OverviewGrid />}
       {pageState === "Graph" && <CalandarGraphWrapper />}
     </div>
   );

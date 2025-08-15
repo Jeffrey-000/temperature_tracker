@@ -118,7 +118,7 @@ export default function CalandarGraphWrapper() {
           topicStats={topicStats}
         />
       </div>
-      {topicStats && <TemperatureWidget data={topicStats} />}
+      {topicStats && <TemperatureWidget data={topicStats} fixed />}
     </div>
   );
 }
