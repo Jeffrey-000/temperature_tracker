@@ -4,7 +4,7 @@ export type disabledDatesType = {
   dates?: Date[];
 };
 
-type SensorDataDB = {
+export type SensorDataDB = {
   temperature: number;
   humidity: number;
   time: number;

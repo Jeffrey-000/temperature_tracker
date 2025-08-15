@@ -1,25 +1,28 @@
 "use client";
 import {
-  SensorData,
-  disabledDatesType,
-  TopicStats,
-  TopicStatsDB,
+  type SensorData,
+  type disabledDatesType,
+  type TopicStats,
 } from "@/lib/types";
-import { useState, useEffect } from "react";
 import { type DateRange } from "react-day-picker";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import CustomCalendar from "@/components/calendars/CustomCalendar";
 import Graph from "@/components/Graph";
 import { getPresets } from "@/components/calendars/CustomCalendar";
-import { TopicSelector } from "./TopicSelector";
+import TopicSelector from "./TopicSelector";
 import TemperatureWidget from "./TemperatureWidget";
 import {
   fetchSensorData,
   fetchValidDateRange,
   fetchTopics,
-} from "@/lib/CalandarGraphWrapperFunctions";
+  fetchTopicStatistics,
+} from "@/lib/fetch";
 import { FetchError } from "@/lib/error";
 
 export default function CalandarGraphWrapper() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const presets = getPresets();
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: presets[0].from,
@@ -36,9 +39,13 @@ export default function CalandarGraphWrapper() {
     fetchTopics()
       .then((topics) => {
         setTopicList(topics);
-        const savedTopic = localStorage.getItem("selectedTopic");
-        if (savedTopic && topics.includes(savedTopic)) {
-          setSelectedTopic(savedTopic);
+        const topicParam = searchParams.get("topic"); //localStorage.getItem("selectedTopic");
+        if (topicParam && topics.includes(topicParam)) {
+          setSelectedTopic(topicParam);
+        } else if (searchParams.has("topic")) {
+          const param = new URLSearchParams(searchParams.toString());
+          param.set("topic", "");
+          router.push(`?${param.toString()}`);
         }
       })
       .catch((err) => {
@@ -78,44 +85,15 @@ export default function CalandarGraphWrapper() {
           console.error("Unexpected Error:", err);
         }
       });
-  }, [selectedTopic]);
-
-  useEffect(() => {
-    async function getstats() {
-      const response = await fetch(`/api/data/${selectedTopic}/statistics`);
-      if (!response.ok) {
-        return;
-      }
-      const jason: TopicStatsDB = await response.json();
-      console.log(jason);
-
-      setTopicStats({
-        current: {
-          ...jason.current,
-          time: new Date(jason.current.time * 1000),
-        },
-        maxTemp: jason.maxTemp.map((item) => ({
-          ...item,
-          time: new Date(item.time * 1000),
-        })),
-
-        minTemp: jason.maxTemp.map((item) => ({
-          ...item,
-          time: new Date(item.time * 1000),
-        })),
-
-        maxHumidity: jason.maxHumidity.map((item) => ({
-          ...item,
-          time: new Date(item.time * 1000),
-        })),
-
-        minHumidity: jason.minHumidity.map((item) => ({
-          ...item,
-          time: new Date(item.time * 1000),
-        })),
+    fetchTopicStatistics(selectedTopic)
+      .then((data) => setTopicStats(data))
+      .catch((err) => {
+        if (err instanceof FetchError) {
+          console.error("Fetch Error:", err.message, err.status);
+        } else {
+          console.error("Unexpected Error:", err);
+        }
       });
-    }
-    getstats();
   }, [selectedTopic]);
 
   return (

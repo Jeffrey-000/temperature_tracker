@@ -18,6 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { stateTuple } from "../lib/utils";
 
@@ -26,7 +27,9 @@ type Props = {
   valueState: stateTuple<string>;
 };
 
-export function TopicSelector({ topicList, valueState }: Props) {
+export default function TopicSelector({ topicList, valueState }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = valueState;
 
@@ -58,6 +61,12 @@ export function TopicSelector({ topicList, valueState }: Props) {
                   onSelect={(currentValue) => {
                     setValue(currentValue === value ? "" : currentValue);
                     setOpen(false);
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set(
+                      "topic",
+                      currentValue === value ? "" : currentValue
+                    );
+                    router.push(`?${params.toString()}`);
                   }}
                 >
                   {topic}
