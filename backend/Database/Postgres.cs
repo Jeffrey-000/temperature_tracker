@@ -12,14 +12,22 @@ public class PostgresService {
         using var conn = new NpgsqlConnection(_connectionString);
         conn.Open();
 
-        using var cmd = new NpgsqlCommand(@"
-                            SELECT table_name
-                            FROM information_schema.tables
-                            WHERE table_schema = 'public'
-                            AND table_type = 'BASE TABLE'
-                            ORDER BY table_name;", conn);
+        using var createTable_cmd = new NpgsqlCommand(@"
+            CREATE TABLE IF NOT EXISTS temperature_humidity_data (
+                id SERIAL PRIMARY KEY,
+                temperature DOUBLE PRECISION,
+                humidity DOUBLE PRECISION,
+                time BIGINT,
+                topic TEXT
+            );", conn);
+        createTable_cmd.ExecuteNonQuery();
 
-        using var reader = cmd.ExecuteReader();
+        using var existingTopics_cmd = new NpgsqlCommand(@"
+                            SELECT DISTINCT topic
+                            FROM temperature_humidity_data
+                            ;", conn);
+
+        using var reader = existingTopics_cmd.ExecuteReader();
 
         while (reader.Read()) {
             if (!reader.IsDBNull(0)) {
@@ -28,28 +36,12 @@ public class PostgresService {
         }
     }
 
-    private async Task _createTable(string topic) {
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-        string TABLE_TEMPLATE = @"
-            CREATE TABLE IF NOT EXISTS @topic (
-                id SERIAL PRIMARY KEY,
-                temperature DOUBLE PRECISION,
-                humidity DOUBLE PRECISION,
-                time BIGINT
-            );";
-        var tableExistsCmd = new NpgsqlCommand(TABLE_TEMPLATE.Replace("@topic", topic.formatTopicForDB()), conn); //Npg does not allow dynamic table names
-        await tableExistsCmd.ExecuteNonQueryAsync();
-    }
+
     public async Task SaveSensorDataAsync(string topic, SensorData data) {
-        if (topic is null) {
-            return;
-        }
-        if (data.isInvalidSensorData()) {
+        if (topic is null || data.isInvalidSensorData()) {
             return;
         }
         if (!_existingTopics.Contains(topic)) {
-            await _createTable(topic);
             _existingTopics.Add(topic);
         }
 
@@ -57,15 +49,13 @@ public class PostgresService {
         await conn.OpenAsync();
 
         var cmd = new NpgsqlCommand($@"
-            INSERT INTO {topic} (temperature, humidity, time)
-            VALUES (@temp, @hum, @time);", conn);
+            INSERT INTO temperature_humidity_data (temperature, humidity, time, topic)
+            VALUES (@temp, @hum, @time, @topic);", conn);
         cmd.Parameters.AddWithValue("@temp", data.temperature);
         cmd.Parameters.AddWithValue("@hum", data.humidity);
         cmd.Parameters.AddWithValue("@time", data.time);
-
-
+        cmd.Parameters.AddWithValue("@topic", topic);
         await cmd.ExecuteNonQueryAsync();
-
     }
 
     public async Task<List<SensorData>> GetSensorDataAsync(string topic, int? limit, long? start, long? stop) {
@@ -75,16 +65,18 @@ public class PostgresService {
 
         string sql;
         if (limit is not null || (start is null && stop is null)) {
-            sql = $@"SELECT temperature, humidity, time FROM {topic.formatTopicForDB()}
+            sql = $@"SELECT temperature, humidity, time FROM temperature_humidity_data
                                     WHERE 1=1 
+                                    AND topic = @topic
                                     AND (time >= @start OR @start IS NULL)
                                     AND (time <= @stop OR @stop IS NULL)
                                     ORDER BY time
                                     LIMIT @limit
                                     ;";
         } else {
-            sql = $@"SELECT temperature, humidity, time FROM {topic.formatTopicForDB()}
+            sql = $@"SELECT temperature, humidity, time FROM temperature_humidity_data
                                     WHERE 1=1 
+                                    AND topic = @topic
                                     AND (time >= @start OR @start IS NULL)
                                     AND (time <= @stop OR @stop IS NULL)
                                     ORDER BY time
@@ -98,6 +90,7 @@ public class PostgresService {
 
         cmd.Parameters.AddWithValue("@start", (object?)start ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@stop", (object?)stop ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@topic", topic);
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -119,8 +112,10 @@ public class PostgresService {
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        using var cmd = new NpgsqlCommand($@"SELECT MIN(time), MAX(time) FROM {topic.formatTopicForDB()}
+        using var cmd = new NpgsqlCommand($@"SELECT MIN(time), MAX(time) FROM temperature_humidity_data
+                                            WHERE topic = @topic
                                     ;", conn);
+        cmd.Parameters.AddWithValue("@topic", topic);
         await using var reader = await cmd.ExecuteReaderAsync();
         long min = 0;
         long max = 0;
@@ -145,11 +140,9 @@ public class PostgresService {
         await conn.OpenAsync();
 
         using var cmd = new NpgsqlCommand(@"
-                                SELECT table_name
-                                FROM information_schema.tables
-                                WHERE table_schema = 'public'
-                                AND table_type = 'BASE TABLE'
-                                ORDER BY table_name;", conn);
+                            SELECT DISTINCT topic
+                            FROM temperature_humidity_data
+                            ;", conn);
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -169,8 +162,8 @@ public class PostgresService {
         }
         await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
-        using var cmd = new NpgsqlCommand(DBHelperClass._magic_chatGPT_one_pass_topic_stats_sql_str.Replace("@topic", topic), conn);
-
+        using var cmd = new NpgsqlCommand(DBHelperClass._magic_chatGPT_one_pass_topic_stats_sql_str, conn);
+        cmd.Parameters.AddWithValue("@topic", topic);
         cmd.Parameters.AddWithValue("@start", (object?)start ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@stop", (object?)stop ?? DBNull.Value);
 

@@ -26,9 +26,10 @@ public static class DBHelperClass {
             RANK() OVER (ORDER BY temperature ASC,  time DESC)  AS r_minTemp,
             RANK() OVER (ORDER BY humidity DESC,    time DESC)  AS r_maxHumidity,
             RANK() OVER (ORDER BY humidity ASC,     time DESC)  AS r_minHumidity
-        FROM @topic
-        WHERE
-            (time >= @start OR @start IS NULL)
+        FROM temperature_humidity_data
+        WHERE 1=1
+            AND topic = @topic
+            AND (time >= @start OR @start IS NULL)
             AND (time <= @stop OR @stop IS NULL)
     ),
 combined AS (
