@@ -25,7 +25,8 @@ public class MqttListenerService : BackgroundService {
         mqttClient.ApplicationMessageReceivedAsync += async e => {
             string topic = e.ApplicationMessage.Topic.Replace("/", "_");
             var data = MessageHandler.handleReceive(e);
-            if (data is not null) await _db.SaveSensorDataAsync(topic, data);
+            if (data is not null)
+                await _db.SaveSensorDataAsync(topic, data);
         };
 
 
@@ -47,9 +48,10 @@ public class MqttListenerService : BackgroundService {
 static class MessageHandler {
     public static SensorData? handleReceive(MqttApplicationMessageReceivedEventArgs e) {
         string jasonString = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-        if (jasonString is null) return null;
+        if (jasonString is null)
+            return null;
         try {
-            SensorData data = JsonSerializer.Deserialize<SensorData>(jasonString);
+            SensorData? data = JsonSerializer.Deserialize<SensorData>(jasonString);
             return data;
         } catch (Exception) {
             return null;
