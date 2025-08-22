@@ -4,16 +4,21 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
+  DrawerFooter,
+  DrawerClose,
 } from "@/components/ui/drawer";
 import CurrentDataBox from "./CurrentDataBox";
+import { Button } from "./ui/button";
 import { type TopicStats } from "@/lib/types";
 
 export default function TemperatureWidget({
   data,
   fixed,
+  title,
 }: {
   data: TopicStats;
   fixed?: boolean;
+  title?: string;
 }) {
   const { mostRecent, maxTemp, minTemp, maxHumidity, minHumidity } = data;
   return (
@@ -28,38 +33,43 @@ export default function TemperatureWidget({
           <CurrentDataBox current={mostRecent} />
         </button>
       </DrawerTrigger>
+      <DrawerContent>
+        <div className="mx-auto w-fit max-w-sm">
+          <DrawerHeader>
+            <DrawerTitle>{title ?? "Temperature & Humidity Stats"}</DrawerTitle>
+          </DrawerHeader>
+          <div className="flex-1">
+            <div className="mt-3 h-[120px]">
+              <div className="flex flex-col space-y-2">
+                <h3 className="text-lg font-semibold">Temperature (°F)</h3>
+                <div className="flex justify-between text-sm text-gray-700">
+                  <span>{`Max: ${maxTemp[0]?.temperature.toFixed(2)}`}</span>
+                  <span>{`(${maxTemp[0]?.time.toLocaleString()})`}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-700">
+                  <span>{`Min: ${minTemp[0]?.temperature.toFixed(2)}`}</span>
+                  <span>{`(${minTemp[0]?.time.toLocaleString()})`}</span>
+                </div>
+              </div>
 
-      <DrawerContent className="w-80 p-6">
-        <DrawerHeader>
-          <DrawerTitle className="text-lg font-semibold">
-            Temperature & Humidity Stats
-          </DrawerTitle>
-        </DrawerHeader>
-
-        <div className="space-y-4">
-          <div className="flex flex-col space-y-2">
-            <h3 className="text-lg font-semibold">Temperature (°F)</h3>
-            <div className="flex justify-between text-sm text-gray-700">
-              <span>{`Max: ${maxTemp[0]?.temperature.toFixed(1)}`}</span>
-              <span>{`(${maxTemp[0]?.time.toLocaleString()})`}</span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-700">
-              <span>{`Min: ${minTemp[0]?.temperature.toFixed(1)}`}</span>
-              <span>{`(${minTemp[0]?.time.toLocaleString()})`}</span>
+              <div className="flex flex-col space-y-2">
+                <h3 className="text-lg font-semibold">Humidity (%)</h3>
+                <div className="flex justify-between text-sm text-gray-700">
+                  <span>{`Max: ${maxHumidity[0]?.humidity.toFixed(2)}`}</span>
+                  <span>{`(${maxHumidity[0]?.time.toLocaleString()})`}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-700">
+                  <span>{`Min: ${minHumidity[0]?.humidity.toFixed(2)}`}</span>
+                  <span>{`(${minHumidity[0]?.time.toLocaleString()})`}</span>
+                </div>
+              </div>
             </div>
           </div>
-
-          <div className="flex flex-col space-y-2">
-            <h3 className="text-lg font-semibold">Humidity (%)</h3>
-            <div className="flex justify-between text-sm text-gray-700">
-              <span>{`Max: ${maxHumidity[0]?.humidity.toFixed(1)}`}</span>
-              <span>{`(${maxHumidity[0]?.time.toLocaleString()})`}</span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-700">
-              <span>{`Min: ${minHumidity[0]?.humidity.toFixed(1)}`}</span>
-              <span>{`(${minHumidity[0]?.time.toLocaleString()})`}</span>
-            </div>
-          </div>
+          <DrawerFooter className="mt-10 pt-4">
+            <DrawerClose asChild>
+              <Button variant="outline">Close</Button>
+            </DrawerClose>
+          </DrawerFooter>
         </div>
       </DrawerContent>
     </Drawer>

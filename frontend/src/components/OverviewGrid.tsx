@@ -37,7 +37,12 @@ export default function OverviewGrid() {
           </h3>
           {gridElements[topic] ? (
             <div className="flex flex-col md:flex-row items-center">
-              <TemperatureWidget data={gridElements[topic]} />
+              <TemperatureWidget
+                data={gridElements[topic]}
+                title={`${topic
+                  .substring("sensors_temperature_".length)
+                  .replace("_", "/")} Temperature & Humidity`}
+              />
               <Button
                 variant={"link"}
                 onClick={() => {
