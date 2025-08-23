@@ -26,7 +26,7 @@ public class TopicsController : ControllerBase {
 
 
     [HttpGet("{topic}/metadata")]
-    public async Task<ActionResult<TopicMetaDataDto>> GetTopicStats(string topic) {
+    public async Task<ActionResult<TopicMetaDataDto>> GetTopicMetadata(string topic) {
         try {
             var metaData = await _db.GetTopicMetaDataAsync(topic);
             return Ok(metaData);
