@@ -25,41 +25,23 @@ export default function Graph({ data, title, topicStats }: Props) {
 
   useEffect(() => {
     if (!data || data.length === 0) return;
+    const arr: Data[] = [];
     if (checked.includes("temperature")) {
-      if (
-        !plotData.some((elem) => elem.name?.toLowerCase() === "temperature")
-      ) {
-        setPlotData((prev) => [...prev, temperaturePlotData(data)]);
-      }
-    } else {
-      setPlotData((prev) =>
-        prev.filter((item) => item.name?.toLowerCase() !== "temperature")
-      );
+      arr.push(temperaturePlotData(data));
     }
     if (checked.includes("humidity")) {
-      if (!plotData.some((elem) => elem.name?.toLowerCase() === "humidity")) {
-        setPlotData((prev) => [...prev, humidityPlotData(data)]);
-      }
-    } else {
-      setPlotData((prev) =>
-        prev.filter((item) => item.name?.toLowerCase() !== "humidity")
-      );
+      arr.push(humidityPlotData(data));
     }
 
-    setPlotData((prev) => prev.filter((item) => item.name !== "stats")); //always remove stats on check change then add them back in conditionally
-    if (checked.includes("stats")) {
-      setPlotData((prev) => [
-        ...prev,
-        ...(topicStats && checked.includes("temperature")
-          ? tempStatsPlotData(topicStats)
-          : []),
-        ...(topicStats && checked.includes("humidity")
-          ? humStatsPlotData(topicStats)
-          : []),
-      ]);
+    if (topicStats && checked.includes("stats")) {
+      if (checked.includes("temperature")) {
+        arr.push(...tempStatsPlotData(topicStats));
+      }
+      if (checked.includes("humidity")) {
+        arr.push(...humStatsPlotData(topicStats));
+      }
     }
-    //warning for missing plotdata in dependencies
-    // eslint-disable-next-line
+    setPlotData(arr);
   }, [data, topicStats, checked]);
   return (
     <>

@@ -60,6 +60,21 @@ export default function CalandarGraphWrapper() {
 
   useEffect(() => {
     if (selectedTopic.length === 0) {
+      return;
+    }
+    fetchValidDateRange(selectedTopic)
+      .then((value) => setDisabledDates(value))
+      .catch((err) => {
+        if (err instanceof FetchError) {
+          console.error("Fetch Error:", err.message, err.status);
+        } else {
+          console.error("Unexpected Error:", err);
+        }
+      });
+  }, [selectedTopic]);
+
+  useEffect(() => {
+    if (selectedTopic.length === 0) {
       setSensorData([]);
       return;
     }
@@ -74,26 +89,10 @@ export default function CalandarGraphWrapper() {
       });
 
     localStorage.setItem("selectedTopic", selectedTopic);
-  }, [dateRange, selectedTopic]);
-
-  useEffect(() => {
-    if (selectedTopic.length === 0) {
-      return;
-    }
-    fetchValidDateRange(selectedTopic)
-      .then((value) => setDisabledDates(value))
-      .catch((err) => {
-        if (err instanceof FetchError) {
-          console.error("Fetch Error:", err.message, err.status);
-        } else {
-          console.error("Unexpected Error:", err);
-        }
-      });
     let start: Date | number | undefined = dateRange
       ? dateRange.from ?? undefined
       : undefined;
     start = start ? Math.floor(start.getTime() / 1000) : undefined;
-
     fetchTopicStatistics(selectedTopic, start)
       .then((data) => setTopicStats(data))
       .catch((err) => {
@@ -103,7 +102,8 @@ export default function CalandarGraphWrapper() {
           console.error("Unexpected Error:", err);
         }
       });
-  }, [selectedTopic]);
+  }, [dateRange, selectedTopic]);
+
   return (
     <div className="container flex flex-col items-center max-w-[100vw] ">
       <TopicSelector
