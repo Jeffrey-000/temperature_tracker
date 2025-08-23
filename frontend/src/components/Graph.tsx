@@ -10,7 +10,6 @@ interface Props {
   title: string;
   topicStats?: TopicStats;
 }
-// eslint-disable-next-line
 export default function Graph({ data, title, topicStats }: Props) {
   const { theme } = useTheme();
 
@@ -33,6 +32,54 @@ export default function Graph({ data, title, topicStats }: Props) {
           mode: "lines",
           line: { color: "#86c7fc" },
           name: "Humidity",
+        },
+        {
+          x: topicStats ? topicStats.maxTemp.map((item) => item.time) : [],
+          y: topicStats
+            ? topicStats.maxTemp.map((item) => item.temperature)
+            : [],
+          type: "scatter",
+          mode: "text+markers",
+          marker: { color: "red", size: 5 },
+          text: undefined,
+          textposition: "top center",
+          showlegend: false,
+        },
+        {
+          x: topicStats ? topicStats.minTemp.map((item) => item.time) : [],
+          y: topicStats
+            ? topicStats.minTemp.map((item) => item.temperature)
+            : [],
+          type: "scatter",
+          mode: "text+markers",
+          marker: { color: "red", size: 5 },
+          text: undefined,
+          textposition: "top center",
+          showlegend: false,
+        },
+        {
+          x: topicStats ? topicStats.maxHumidity.map((item) => item.time) : [],
+          y: topicStats
+            ? topicStats.maxHumidity.map((item) => item.humidity)
+            : [],
+          type: "scatter",
+          mode: "text+markers",
+          marker: { color: "red", size: 5 },
+          text: undefined,
+          textposition: "top center",
+          showlegend: false,
+        },
+        {
+          x: topicStats ? topicStats.minHumidity.map((item) => item.time) : [],
+          y: topicStats
+            ? topicStats.minHumidity.map((item) => item.humidity)
+            : [],
+          type: "scatter",
+          mode: "text+markers",
+          marker: { color: "red", size: 5 },
+          text: undefined,
+          textposition: "top center",
+          showlegend: false,
         },
       ]}
       layout={{

@@ -89,8 +89,14 @@ export async function fetchTopics(): Promise<string[]> {
   }
 }
 
-export async function fetchTopicStatistics(topic: string): Promise<TopicStats> {
-  const response: Response = await _fetch(`/api/data/${topic}/statistics`);
+export async function fetchTopicStatistics(
+  topic: string,
+  start?: number,
+  end?: number
+): Promise<TopicStats> {
+  const response: Response = await _fetch(
+    `/api/data/${topic}/statistics?start=${start ?? ""}&end=${end ?? ""}`
+  );
   let jason: TopicStatsDB;
   try {
     jason = await response.json();

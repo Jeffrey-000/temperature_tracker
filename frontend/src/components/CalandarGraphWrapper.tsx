@@ -88,7 +88,12 @@ export default function CalandarGraphWrapper() {
           console.error("Unexpected Error:", err);
         }
       });
-    fetchTopicStatistics(selectedTopic)
+    let start: Date | number | undefined = dateRange
+      ? dateRange.from ?? undefined
+      : undefined;
+    start = start ? Math.floor(start.getTime() / 1000) : undefined;
+
+    fetchTopicStatistics(selectedTopic, start)
       .then((data) => setTopicStats(data))
       .catch((err) => {
         if (err instanceof FetchError) {
