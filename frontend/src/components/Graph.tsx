@@ -5,7 +5,7 @@ import { type Data } from "plotly.js";
 
 import { type SensorData, type TopicStats } from "@/lib/types";
 import { useTheme } from "next-themes";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Checkbox } from "./ui/checkbox";
 import { Label } from "./ui/label";
 interface Props {
@@ -14,25 +14,53 @@ interface Props {
   topicStats?: TopicStats;
 }
 const checkBoxOptions = [
-  { id: "temperature", func: temperaturePlotData },
-  { id: "humidity", func: humidityPlotData },
+  { id: "temperature" },
+  { id: "humidity" },
+  { id: "stats" },
 ];
-// eslint-disable-next-line
 export default function Graph({ data, title, topicStats }: Props) {
   const { theme } = useTheme();
   const [plotData, setPlotData] = useState<Data[]>([]);
   const [checked, setChecked] = useState<string[]>(["temperature"]);
-  // behavior: want to default showing temperature graph
-  // however data is initially null because waiting for fetch
-  // set temperature data first time it is not null, ignore all future changes
-  const useEffectRef = useRef(false);
-  useEffect(() => {
-    //if (useEffectRef.current) return; //idk works commented out. ignoring for now cuz extra computattion not big deal rn
-    if (!data || !checked.includes("temperature")) return;
 
-    setPlotData((prev) => [...prev, temperaturePlotData(data)]);
-    useEffectRef.current = true;
-  }, [data]);
+  useEffect(() => {
+    if (!data || data.length === 0) return;
+    if (checked.includes("temperature")) {
+      if (
+        !plotData.some((elem) => elem.name?.toLowerCase() === "temperature")
+      ) {
+        setPlotData((prev) => [...prev, temperaturePlotData(data)]);
+      }
+    } else {
+      setPlotData((prev) =>
+        prev.filter((item) => item.name?.toLowerCase() !== "temperature")
+      );
+    }
+    if (checked.includes("humidity")) {
+      if (!plotData.some((elem) => elem.name?.toLowerCase() === "humidity")) {
+        setPlotData((prev) => [...prev, humidityPlotData(data)]);
+      }
+    } else {
+      setPlotData((prev) =>
+        prev.filter((item) => item.name?.toLowerCase() !== "humidity")
+      );
+    }
+
+    setPlotData((prev) => prev.filter((item) => item.name !== "stats")); //always remove stats on check change then add them back in conditionally
+    if (checked.includes("stats")) {
+      setPlotData((prev) => [
+        ...prev,
+        ...(topicStats && checked.includes("temperature")
+          ? tempStatsPlotData(topicStats)
+          : []),
+        ...(topicStats && checked.includes("humidity")
+          ? humStatsPlotData(topicStats)
+          : []),
+      ]);
+    }
+    //warning for missing plotdata in dependencies
+    // eslint-disable-next-line
+  }, [data, topicStats, checked]);
   return (
     <>
       <div className="flex flex-row gap-2">
@@ -44,15 +72,9 @@ export default function Graph({ data, title, topicStats }: Props) {
               onCheckedChange={(check) => {
                 if (check) {
                   setChecked([...checked, option.id]);
-                  setPlotData((prev) => [...prev, option.func(data!)]);
                 } else {
                   setChecked((prev) =>
                     prev.filter((item) => item !== option.id)
-                  );
-                  setPlotData((prev) =>
-                    prev.filter(
-                      (item) => item.name?.toLowerCase() !== option.id
-                    )
                   );
                 }
               }}
@@ -62,33 +84,6 @@ export default function Graph({ data, title, topicStats }: Props) {
             </Label>
           </div>
         ))}
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id={"stats"}
-            checked={checked.includes("stats")}
-            onCheckedChange={(check) => {
-              setPlotData((prev) =>
-                prev.filter((item) => item.name !== "stats")
-              ); //always remove stats on check change then add them back in conditionally
-              if (check) {
-                //todo: maybe move this logic into a use effect because stats remain when either temp or hum is unchecked
-                setChecked([...checked, "stats"]);
-                setPlotData((prev) => [
-                  ...prev,
-                  ...(topicStats && checked.includes("temperature")
-                    ? tempStatsPlotData(topicStats)
-                    : []),
-                  ...(topicStats && checked.includes("humidity")
-                    ? humStatsPlotData(topicStats)
-                    : []),
-                ]);
-              } else {
-                setChecked((prev) => prev.filter((item) => item !== "stats"));
-              }
-            }}
-          />
-          <Label htmlFor={"stats"}>Stats</Label>
-        </div>
       </div>
       <Plot
         className="w-full"
@@ -127,7 +122,6 @@ function humidityPlotData(data: SensorData[]): Data {
     name: "Humidity",
   };
 }
-// eslint-disable-next-line
 function tempStatsPlotData(topicStats: TopicStats): Data[] {
   return [
     {
@@ -154,7 +148,6 @@ function tempStatsPlotData(topicStats: TopicStats): Data[] {
     },
   ];
 }
-// eslint-disable-next-line
 function humStatsPlotData(topicStats: TopicStats): Data[] {
   return [
     {

@@ -55,6 +55,7 @@ export default function CalandarGraphWrapper() {
           console.error("Unexpected Error:", err);
         }
       });
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -103,7 +104,6 @@ export default function CalandarGraphWrapper() {
         }
       });
   }, [selectedTopic]);
-
   return (
     <div className="container flex flex-col items-center max-w-[100vw] ">
       <TopicSelector
